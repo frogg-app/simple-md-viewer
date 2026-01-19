@@ -12,7 +12,7 @@ server {
 
     # Proxy to md-viewer container
     location / {
-        proxy_pass http://127.0.0.1:2614;
+        proxy_pass http://127.0.0.1:37500;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -25,7 +25,7 @@ server {
 
     # Health check endpoint
     location /health {
-        proxy_pass http://127.0.0.1:2614/health;
+        proxy_pass http://127.0.0.1:37500/health;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
