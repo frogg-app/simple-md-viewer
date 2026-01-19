@@ -45,7 +45,9 @@ export class MermaidHandler {
     const mermaidBlocks = container.querySelectorAll('.mermaid-placeholder');
 
     for (const block of mermaidBlocks) {
-      const code = block.getAttribute('data-mermaid');
+      const encoded = block.getAttribute('data-mermaid');
+      // Decode base64 to get original mermaid code
+      const code = decodeURIComponent(escape(atob(encoded)));
       const id = block.id;
 
       try {

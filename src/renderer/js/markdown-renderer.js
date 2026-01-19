@@ -61,7 +61,9 @@ export class MarkdownRenderer {
       // Check for mermaid
       if (language === 'mermaid') {
         const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        return `<div class="mermaid-placeholder" data-mermaid="${this.escapeHtml(code)}" id="${id}"></div>`;
+        // Base64 encode to preserve special characters through HTML parsing and sanitization
+        const encoded = btoa(unescape(encodeURIComponent(code)));
+        return `<div class="mermaid-placeholder" data-mermaid="${encoded}" id="${id}"></div>`;
       }
 
       // Check for math blocks
