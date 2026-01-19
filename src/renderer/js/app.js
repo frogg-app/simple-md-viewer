@@ -37,6 +37,7 @@ class App {
     this.updateShortcutHint();
     this.updateShortcutsDialog();
     this.loadSectionVisibility();
+    this.applyDialogCentering();
 
     // Load docs folder in web mode
     if (!this.isElectron()) {
@@ -792,10 +793,15 @@ class App {
     const settingsClose = document.getElementById('settings-close');
     const showDocsCheckbox = document.getElementById('show-docs');
     const showRecentCheckbox = document.getElementById('show-recent');
+    const centerDialogsCheckbox = document.getElementById('center-dialogs');
 
     // Open settings dialog
     if (settingsBtn && settingsDialog) {
       settingsBtn.addEventListener('click', () => {
+        // Set current checkbox values
+        if (centerDialogsCheckbox) {
+          centerDialogsCheckbox.checked = this.settingsManager.get('centerDialogs');
+        }
         settingsDialog.showModal();
       });
     }
@@ -833,6 +839,30 @@ class App {
       });
     }
 
+    // Center dialogs toggle
+    if (centerDialogsCheckbox) {
+      centerDialogsCheckbox.addEventListener('change', () => {
+        const centered = centerDialogsCheckbox.checked;
+        this.settingsManager.set('centerDialogs', centered);
+        this.applyDialogCentering();
+      });
+    }
+
+  }
+
+  /**
+   * Apply dialog centering based on setting
+   */
+  applyDialogCentering() {
+    const centered = this.settingsManager.get('centerDialogs');
+    const dialogs = document.querySelectorAll('dialog');
+    dialogs.forEach(dialog => {
+      if (centered) {
+        dialog.classList.add('centered');
+      } else {
+        dialog.classList.remove('centered');
+      }
+    });
   }
 }
 

@@ -7,7 +7,8 @@ export class SettingsManager {
     this.prefix = 'mdviewer_';
     this.defaults = {
       showDocsFolder: true,
-      showRecentFiles: true
+      showRecentFiles: true,
+      centerDialogs: false
     };
   }
 

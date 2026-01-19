@@ -10,6 +10,13 @@ dialog {
   max-width: 90vw;
   max-height: 90vh;
   overflow: hidden;
+  /* Default: top-right positioning */
+  margin: 2rem 2rem auto auto;
+}
+
+/* Centered dialogs (when setting enabled) */
+dialog.centered {
+  margin: auto;
 }
 
 dialog::backdrop {
@@ -247,6 +254,7 @@ dialog h3 {
 /* Shortcuts dialog */
 #shortcuts-dialog {
   width: 400px;
+  padding: 1.5rem;
 }
 
 .shortcuts-table {
@@ -270,6 +278,7 @@ dialog h3 {
 /* About dialog */
 #about-dialog {
   width: 400px;
+  padding: 1.5rem;
 }
 
 #about-dialog ul {
