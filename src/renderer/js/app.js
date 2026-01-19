@@ -13,10 +13,10 @@ class App {
     this.mermaidHandler = new MermaidHandler();
     this.themeManager = new ThemeManager();
     this.fileHandler = new FileHandler();
-    this.settingsManager = new SettingsManager();
-    this.toast = new ToastNotifications(this.settingsManager);
+    this.toast = new ToastNotifications();
     this.remoteDialog = new RemoteDialog();
     this.credentialsDialog = new CredentialsDialog();
+    this.settingsManager = new SettingsManager();
 
     this.currentFilePath = null;
     this.isRemoteFile = false;
@@ -792,15 +792,10 @@ class App {
     const settingsClose = document.getElementById('settings-close');
     const showDocsCheckbox = document.getElementById('show-docs');
     const showRecentCheckbox = document.getElementById('show-recent');
-    const centerToastsCheckbox = document.getElementById('center-toasts');
 
     // Open settings dialog
     if (settingsBtn && settingsDialog) {
       settingsBtn.addEventListener('click', () => {
-        // Set current checkbox values
-        if (centerToastsCheckbox) {
-          centerToastsCheckbox.checked = this.settingsManager.get('centerToasts');
-        }
         settingsDialog.showModal();
       });
     }
@@ -835,15 +830,6 @@ class App {
           recentSection.style.display = show ? '' : 'none';
         }
         this.updateSectionsLayout();
-      });
-    }
-
-    // Center toasts toggle
-    if (centerToastsCheckbox) {
-      centerToastsCheckbox.addEventListener('change', () => {
-        const centered = centerToastsCheckbox.checked;
-        this.settingsManager.set('centerToasts', centered);
-        this.toast.updatePosition();
       });
     }
 

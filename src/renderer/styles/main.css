@@ -88,15 +88,6 @@ body {
   pointer-events: none;
 }
 
-#toast-container.centered {
-  bottom: auto;
-  right: auto;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  align-items: center;
-}
-
 .toast {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -113,26 +104,14 @@ body {
   max-width: 400px;
 }
 
-#toast-container.centered .toast {
-  transform: translateY(-20px);
-}
-
 .toast.show {
   transform: translateX(0);
   opacity: 1;
 }
 
-#toast-container.centered .toast.show {
-  transform: translateY(0);
-}
-
 .toast.hide {
   transform: translateX(100%);
   opacity: 0;
-}
-
-#toast-container.centered .toast.hide {
-  transform: translateY(-20px);
 }
 
 .toast-success {

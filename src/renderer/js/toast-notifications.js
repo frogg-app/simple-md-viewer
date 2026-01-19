@@ -1,19 +1,8 @@
 export class ToastNotifications {
-  constructor(settingsManager) {
+  constructor() {
     this.container = document.getElementById('toast-container');
     this.toasts = new Map();
     this.counter = 0;
-    this.settingsManager = settingsManager;
-    this.updatePosition();
-  }
-
-  updatePosition() {
-    const centered = this.settingsManager?.get('centerToasts') || false;
-    if (centered) {
-      this.container.classList.add('centered');
-    } else {
-      this.container.classList.remove('centered');
-    }
   }
 
   show(message, type = 'info', duration = 3000) {
