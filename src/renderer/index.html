@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data: file: https:;">
+  <title>MD Viewer</title>
+  <link rel="stylesheet" href="./styles/main.css">
+  <link rel="stylesheet" href="./styles/markdown.css">
+  <link rel="stylesheet" href="./styles/mermaid.css">
+  <link rel="stylesheet" href="./styles/dialogs.css">
+  <link rel="stylesheet" href="./styles/themes/light.css">
+  <link rel="stylesheet" href="./styles/themes/dark.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="hidden">
+      <div class="loading-spinner"></div>
+      <p class="loading-message">Loading...</p>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Error banner -->
+    <div id="error-banner" class="hidden">
+      <span class="error-message"></span>
+      <button class="error-dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <!-- Connection status banner -->
+    <div id="connection-banner" class="hidden">
+      <span class="connection-message"></span>
+      <button class="connection-retry">Retry</button>
+      <button class="connection-dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state">
+      <div class="empty-icon">📄</div>
+      <h2>Drag a markdown file here</h2>
+      <p>or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to open</p>
+      <div class="recent-files">
+        <h3>Recent Files</h3>
+        <ul id="recent-files-list"></ul>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <main id="content" class="hidden">
+      <article id="markdown-content"></article>
+    </main>
+
+    <!-- Dialogs -->
+    <dialog id="remote-dialog" class="modal">
+      <form method="dialog">
+        <h3>Open Remote File</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="remote-protocol">Protocol</label>
+            <select id="remote-protocol">
+              <option value="ssh">SSH/SFTP</option>
+              <option value="smb">SMB/CIFS</option>
+              <option value="nfs">NFS</option>
+            </select>
+          </div>
+          <div class="form-group flex-grow">
+            <label for="remote-host">Host</label>
+            <input type="text" id="remote-host" placeholder="server.example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="remote-port">Port</label>
+            <input type="number" id="remote-port" value="22" min="1" max="65535">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="remote-path">Path</label>
+          <input type="text" id="remote-path" placeholder="/home/user/docs" required>
+        </div>
+        <div class="form-group" id="smb-share-group" style="display: none;">
+          <label for="smb-share">Share Name</label>
+          <input type="text" id="smb-share" placeholder="documents">
+        </div>
+        <div class="file-browser hidden" id="remote-file-browser">
+          <div class="browser-toolbar">
+            <button type="button" id="browser-up" class="icon-btn" title="Go up">⬆</button>
+            <span id="browser-path">/</span>
+            <button type="button" id="browser-refresh" class="icon-btn" title="Refresh">🔄</button>
+          </div>
+          <ul id="browser-list" class="file-list"></ul>
+        </div>
+        <div class="recent-connections" id="recent-connections">
+          <h4>Recent Connections</h4>
+          <ul id="recent-connections-list"></ul>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary" id="remote-cancel">Cancel</button>
+          <button type="button" class="btn-secondary" id="remote-connect">Connect</button>
+          <button type="submit" class="btn-primary" id="remote-open" disabled>Open</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="credentials-dialog" class="modal">
+      <form method="dialog">
+        <h3>Authentication Required</h3>
+        <p class="connection-info">
+          Connect to <strong id="cred-host"></strong> via <span id="cred-protocol"></span>
+        </p>
+        <div class="form-group">
+          <label for="cred-username">Username</label>
+          <input type="text" id="cred-username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="cred-password">Password</label>
+          <input type="password" id="cred-password" autocomplete="current-password">
+        </div>
+        <div class="form-group" id="ssh-key-group" style="display: none;">
+          <label for="cred-keyfile">SSH Private Key (optional)</label>
+          <input type="file" id="cred-keyfile" accept=".pem,.ppk,.key,id_rsa,id_ed25519">
+          <small>Leave empty to use password authentication</small>
+        </div>
+        <div class="form-group" id="smb-domain-group" style="display: none;">
+          <label for="cred-domain">Domain</label>
+          <input type="text" id="cred-domain" placeholder="WORKGROUP">
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="cred-remember">
+          <label for="cred-remember">Remember credentials (encrypted)</label>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary" id="cred-cancel">Cancel</button>
+          <button type="submit" class="btn-primary">Connect</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="shortcuts-dialog" class="modal">
+      <h3>Keyboard Shortcuts</h3>
+      <table class="shortcuts-table">
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Open local file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></td><td>Open remote file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Reload file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td><td>Close window</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd></td><td>Zoom in</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>-</kbd></td><td>Zoom out</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>0</kbd></td><td>Reset zoom</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td>Find in document</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></td><td>Toggle theme</td></tr>
+          <tr><td><kbd>F11</kbd></td><td>Toggle fullscreen</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Close dialog / Exit fullscreen</td></tr>
+        </tbody>
+      </table>
+      <div class="dialog-actions">
+        <button type="button" class="btn-primary" id="shortcuts-close">Close</button>
+      </div>
+    </dialog>
+
+    <dialog id="about-dialog" class="modal">
+      <h3>MD Viewer</h3>
+      <p>Version 1.0.0</p>
+      <p>A minimalist markdown file viewer with support for:</p>
+      <ul>
+        <li>GitHub Flavored Markdown</li>
+        <li>Mermaid diagrams with zoom</li>
+        <li>Syntax highlighting</li>
+        <li>LaTeX/KaTeX math</li>
+        <li>Local and remote file viewing</li>
+        <li>Live file updates</li>
+      </ul>
+      <div class="dialog-actions">
+        <button type="button" class="btn-primary" id="about-close">Close</button>
+      </div>
+    </dialog>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

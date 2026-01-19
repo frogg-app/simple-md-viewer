@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+Thumbs.db
+*.ico
+*.png
+.env
+.env.local
+coverage/

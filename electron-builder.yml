@@ -1,0 +1,40 @@
+appId: com.mdviewer.app
+productName: MD Viewer
+copyright: Copyright 2024
+
+directories:
+  output: dist/electron
+  buildResources: build
+
+files:
+  - "dist/**/*"
+  - "src/main/**/*"
+  - "src/preload/**/*"
+  - "package.json"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  artifactName: "${productName}-Setup-${version}.${ext}"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "MD Viewer"
+  include: build/installer.nsh
+  fileAssociations:
+    - ext: md
+      name: Markdown
+      description: Markdown Document
+      icon: build/md-icon.ico
+    - ext: markdown
+      name: Markdown
+      description: Markdown Document
+      icon: build/md-icon.ico
+
+publish: null

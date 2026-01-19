@@ -1,0 +1,311 @@
+/* Markdown content styles */
+
+#markdown-content {
+  font-size: 1rem;
+  word-wrap: break-word;
+}
+
+/* Headings */
+#markdown-content h1,
+#markdown-content h2,
+#markdown-content h3,
+#markdown-content h4,
+#markdown-content h5,
+#markdown-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  line-height: 1.25;
+  position: relative;
+}
+
+#markdown-content h1 { font-size: 2em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+#markdown-content h2 { font-size: 1.5em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
+#markdown-content h3 { font-size: 1.25em; }
+#markdown-content h4 { font-size: 1em; }
+#markdown-content h5 { font-size: 0.875em; }
+#markdown-content h6 { font-size: 0.85em; color: var(--text-secondary); }
+
+#markdown-content h1:first-child,
+#markdown-content h2:first-child,
+#markdown-content h3:first-child,
+#markdown-content h4:first-child,
+#markdown-content h5:first-child,
+#markdown-content h6:first-child {
+  margin-top: 0;
+}
+
+/* Heading anchors */
+.heading-anchor {
+  position: absolute;
+  left: -1.5em;
+  opacity: 0;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 400;
+  transition: opacity 0.2s;
+}
+
+#markdown-content h1:hover .heading-anchor,
+#markdown-content h2:hover .heading-anchor,
+#markdown-content h3:hover .heading-anchor,
+#markdown-content h4:hover .heading-anchor,
+#markdown-content h5:hover .heading-anchor,
+#markdown-content h6:hover .heading-anchor {
+  opacity: 1;
+}
+
+.heading-anchor:hover {
+  color: var(--link-color);
+}
+
+/* Paragraphs */
+#markdown-content p {
+  margin-bottom: 1em;
+}
+
+/* Links */
+#markdown-content a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+#markdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* Bold and italic */
+#markdown-content strong {
+  font-weight: 600;
+}
+
+#markdown-content em {
+  font-style: italic;
+}
+
+/* Strikethrough */
+#markdown-content del {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+/* Inline code */
+#markdown-content code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
+  font-size: 0.875em;
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+/* Code blocks */
+#markdown-content pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+#markdown-content pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Blockquotes */
+#markdown-content blockquote {
+  margin: 0 0 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--blockquote-border);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+}
+
+#markdown-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Nested blockquotes */
+#markdown-content blockquote blockquote {
+  margin-top: 0.5em;
+}
+
+/* Lists */
+#markdown-content ul,
+#markdown-content ol {
+  margin-bottom: 1em;
+  padding-left: 2em;
+}
+
+#markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+#markdown-content li > ul,
+#markdown-content li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
+
+/* Task lists */
+#markdown-content .task-list-item {
+  list-style: none;
+  margin-left: -1.5em;
+}
+
+#markdown-content .task-list-item input[type="checkbox"] {
+  margin-right: 0.5em;
+  vertical-align: middle;
+}
+
+/* Tables */
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+#markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+#markdown-content th,
+#markdown-content td {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--table-border);
+  text-align: left;
+}
+
+#markdown-content th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+#markdown-content tr:nth-child(even) {
+  background: var(--table-row-alt);
+}
+
+/* Images */
+#markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+#markdown-content img.broken {
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  padding: 2rem;
+  display: block;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* Horizontal rule */
+#markdown-content hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 2em 0;
+}
+
+/* Math blocks */
+.math-block {
+  overflow-x: auto;
+  margin: 1em 0;
+  padding: 1em;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.math-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.math-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+[data-theme="dark"] .math-error {
+  background: #450a0a;
+  border-color: #7f1d1d;
+  color: #fecaca;
+}
+
+/* Footnotes */
+#markdown-content .footnotes {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875em;
+}
+
+#markdown-content .footnotes ol {
+  padding-left: 1.5em;
+}
+
+#markdown-content .footnote-ref {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+#markdown-content .footnote-backref {
+  margin-left: 0.25em;
+}
+
+/* Definition lists */
+#markdown-content dl {
+  margin-bottom: 1em;
+}
+
+#markdown-content dt {
+  font-weight: 600;
+  margin-top: 0.5em;
+}
+
+#markdown-content dd {
+  margin-left: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Abbreviations */
+#markdown-content abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* Superscript and subscript */
+#markdown-content sup,
+#markdown-content sub {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+#markdown-content sup {
+  top: -0.5em;
+}
+
+#markdown-content sub {
+  bottom: -0.25em;
+}
+
+/* Selection */
+#markdown-content ::selection {
+  background: color-mix(in srgb, var(--link-color) 30%, transparent);
+}
+
+/* Highlight.js theme adjustments */
+#markdown-content .hljs {
+  background: transparent;
+  color: inherit;
+}
