@@ -152,14 +152,20 @@ class App {
   }
 
   setupKeyboardShortcuts() {
-    document.addEventListener('keydown', async (e) => {
-      // Ctrl/Cmd + O: Open file
-      if ((e.ctrlKey || e.metaKey) && e.key === 'o' && !e.shiftKey) {
+    // Use capture to intercept before browser handles Ctrl+O
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o' && !e.shiftKey) {
         e.preventDefault();
+        e.stopPropagation();
         if (this.isElectron()) {
-          await window.electronAPI.openFileDialog();
+          window.electronAPI.openFileDialog();
+        } else {
+          document.getElementById('file-input')?.click();
         }
       }
+    }, { capture: true });
+
+    document.addEventListener('keydown', async (e) => {
 
       // Ctrl/Cmd + Shift + O: Open remote
       if ((e.ctrlKey || e.metaKey) && e.key === 'O' && e.shiftKey) {
@@ -242,6 +248,34 @@ class App {
     if (homeBtn) {
       homeBtn.addEventListener('click', () => this.goHome());
     }
+
+    // File input for web mode
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => this.handleFileInput(e));
+    }
+  }
+
+  /**
+   * Handle file input selection (web mode)
+   */
+  handleFileInput(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      this.handleFileOpened({
+        content: event.target.result,
+        path: file.name,
+        fileName: file.name,
+        isRemote: false
+      });
+    };
+    reader.readAsText(file);
+
+    // Reset input so same file can be selected again
+    e.target.value = '';
   }
 
   async openFile(filePath) {
@@ -507,21 +541,14 @@ class App {
     const hint = document.getElementById('shortcut-hint');
     if (!hint) return;
 
-    if (this.isElectron()) {
-      hint.innerHTML = 'or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to open';
-    } else {
-      hint.innerHTML = 'or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> to open remote file';
-    }
+    hint.innerHTML = 'or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to open a file, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> for remote';
   }
 
   /**
-   * Update shortcuts dialog to hide Ctrl+O on web mode
+   * Update shortcuts dialog based on mode
    */
   updateShortcutsDialog() {
-    const ctrlORow = document.getElementById('shortcut-ctrl-o');
-    if (ctrlORow) {
-      ctrlORow.style.display = this.isElectron() ? '' : 'none';
-    }
+    // Ctrl+O now works in both modes, no need to hide
   }
 
   /**

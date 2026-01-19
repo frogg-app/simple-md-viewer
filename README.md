@@ -26,7 +26,7 @@ cd md-viewer
 # Build and run with Docker Compose
 docker-compose up -d
 
-# Access at http://localhost:2614
+# Access at http://localhost:37500
 ```
 
 ### Manual Setup
@@ -64,12 +64,12 @@ services:
   md-viewer:
     build: .
     ports:
-      - "2614:2614"
+      - "37500:37500"
     volumes:
       # Mount your markdown files directory
       - ./docs:/app/docs:ro
     environment:
-      - PORT=2614
+      - PORT=37500
       - DOCS_PATH=/app/docs
 ```
 
