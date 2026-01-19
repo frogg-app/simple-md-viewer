@@ -158,6 +158,75 @@
   filter: none;
 }
 
+/* Ensure text is readable in dark mode */
+[data-theme="dark"] .mermaid-rendered text,
+[data-theme="dark"] .mermaid-rendered .nodeLabel,
+[data-theme="dark"] .mermaid-rendered .edgeLabel,
+[data-theme="dark"] .mermaid-rendered .label,
+[data-theme="dark"] .mermaid-rendered .labelText,
+[data-theme="dark"] .mermaid-rendered .cluster-label,
+[data-theme="dark"] .mermaid-rendered .pieTitleText,
+[data-theme="dark"] .mermaid-rendered .slice,
+[data-theme="dark"] .mermaid-rendered .legend text,
+[data-theme="dark"] .mermaid-rendered .taskText,
+[data-theme="dark"] .mermaid-rendered .taskTextOutsideRight,
+[data-theme="dark"] .mermaid-rendered .taskTextOutsideLeft,
+[data-theme="dark"] .mermaid-rendered .titleText,
+[data-theme="dark"] .mermaid-rendered .sectionTitle,
+[data-theme="dark"] .mermaid-rendered .messageText,
+[data-theme="dark"] .mermaid-rendered .loopText,
+[data-theme="dark"] .mermaid-rendered .noteText,
+[data-theme="dark"] .mermaid-rendered .actor,
+[data-theme="dark"] .mermaid-rendered .relationshipLabel,
+[data-theme="dark"] .mermaid-rendered .entityLabel,
+[data-theme="dark"] .mermaid-rendered .attributeLabel {
+  fill: #e5e7eb !important;
+  color: #e5e7eb !important;
+}
+
+/* Edge/arrow labels */
+[data-theme="dark"] .mermaid-rendered .edgeLabel rect,
+[data-theme="dark"] .mermaid-rendered .labelBkg {
+  fill: #1f2937 !important;
+}
+
+/* Cluster/subgraph backgrounds */
+[data-theme="dark"] .mermaid-rendered .cluster rect {
+  fill: #374151 !important;
+  stroke: #4b5563 !important;
+}
+
+/* Default node styling without explicit fill */
+[data-theme="dark"] .mermaid-rendered .node rect,
+[data-theme="dark"] .mermaid-rendered .node circle,
+[data-theme="dark"] .mermaid-rendered .node polygon,
+[data-theme="dark"] .mermaid-rendered .node ellipse {
+  stroke: #6b7280 !important;
+}
+
+/* Flowchart edges */
+[data-theme="dark"] .mermaid-rendered .flowchart-link,
+[data-theme="dark"] .mermaid-rendered .edge-pattern-solid,
+[data-theme="dark"] .mermaid-rendered path.path {
+  stroke: #9ca3af !important;
+}
+
+/* Arrow markers */
+[data-theme="dark"] .mermaid-rendered marker path {
+  fill: #9ca3af !important;
+  stroke: #9ca3af !important;
+}
+
+/* Sequence diagram specific */
+[data-theme="dark"] .mermaid-rendered .actor-line {
+  stroke: #6b7280 !important;
+}
+
+[data-theme="dark"] .mermaid-rendered .messageLine0,
+[data-theme="dark"] .mermaid-rendered .messageLine1 {
+  stroke: #9ca3af !important;
+}
+
 /* Ensure text is readable */
 .mermaid-rendered .nodeLabel,
 .mermaid-rendered .edgeLabel,
