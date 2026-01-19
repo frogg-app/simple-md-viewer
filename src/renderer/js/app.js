@@ -36,8 +36,6 @@ class App {
     this.setupSettingsDialog();
     this.updateShortcutHint();
     this.updateShortcutsDialog();
-    this.updateHomeButtonTooltip();
-    this.updateShortcutsDialogHomeKey();
     this.loadSectionVisibility();
 
     // Load docs folder in web mode
@@ -201,38 +199,11 @@ class App {
         this.resetZoom();
       }
 
-      // Configurable home hotkey
-      const homeHotkey = this.settingsManager.get('homeHotkey');
-      const isHomeHotkey = this.matchesHotkey(e, homeHotkey);
-
-      if (isHomeHotkey) {
-        // First close any open dialogs
-        const openDialogs = document.querySelectorAll('dialog[open]');
-        if (openDialogs.length > 0) {
-          this.closeAllDialogs();
-        } else if (this.currentFilePath) {
-          // If no dialogs open and viewing a file, go home
-          e.preventDefault();
-          this.goHome();
-        }
+      // Escape closes dialogs
+      if (e.key === 'Escape') {
+        this.closeAllDialogs();
       }
     });
-  }
-
-  /**
-   * Check if a keyboard event matches a hotkey setting
-   */
-  matchesHotkey(e, hotkey) {
-    switch (hotkey) {
-      case 'Escape':
-        return e.key === 'Escape';
-      case 'Backspace':
-        return e.key === 'Backspace' && !e.target.matches('input, textarea, [contenteditable]');
-      case 'KeyH':
-        return (e.ctrlKey || e.metaKey) && e.key === 'h';
-      default:
-        return e.key === 'Escape';
-    }
   }
 
   setupDialogs() {
@@ -245,12 +216,6 @@ class App {
     document.getElementById('about-close').addEventListener('click', () => {
       document.getElementById('about-dialog').close();
     });
-
-    // Home button
-    const homeBtn = document.getElementById('home-btn');
-    if (homeBtn) {
-      homeBtn.addEventListener('click', () => this.goHome());
-    }
 
     // File input for web mode
     const fileInput = document.getElementById('file-input');
@@ -691,32 +656,6 @@ class App {
   }
 
   /**
-   * Go back to the home/welcome screen
-   */
-  goHome() {
-    this.currentFilePath = null;
-    this.isRemoteFile = false;
-
-    // Hide content, show empty state
-    document.getElementById('content').classList.add('hidden');
-    document.getElementById('empty-state').classList.remove('hidden');
-
-    // Reset title
-    document.title = 'MD Viewer';
-
-    // Clear rendered content
-    const markdownContent = document.getElementById('markdown-content');
-    if (markdownContent) {
-      markdownContent.innerHTML = '';
-    }
-
-    // Reload docs folder in web mode
-    if (!this.isElectron()) {
-      this.loadDocsFolder();
-    }
-  }
-
-  /**
    * Update the shortcut hint based on mode (Electron vs Web)
    */
   updateShortcutHint() {
@@ -853,16 +792,10 @@ class App {
     const settingsClose = document.getElementById('settings-close');
     const showDocsCheckbox = document.getElementById('show-docs');
     const showRecentCheckbox = document.getElementById('show-recent');
-    const homeHotkeySelect = document.getElementById('home-hotkey');
 
     // Open settings dialog
     if (settingsBtn && settingsDialog) {
       settingsBtn.addEventListener('click', () => {
-        // Set current hotkey value
-        const currentHotkey = this.settingsManager.get('homeHotkey');
-        if (homeHotkeySelect) {
-          homeHotkeySelect.value = currentHotkey;
-        }
         settingsDialog.showModal();
       });
     }
@@ -900,51 +833,6 @@ class App {
       });
     }
 
-    // Home hotkey change handler
-    if (homeHotkeySelect) {
-      homeHotkeySelect.addEventListener('change', () => {
-        const hotkey = homeHotkeySelect.value;
-        this.settingsManager.set('homeHotkey', hotkey);
-        this.updateHomeButtonTooltip();
-        this.updateShortcutsDialogHomeKey();
-      });
-    }
-  }
-
-  /**
-   * Update the home button tooltip with current hotkey
-   */
-  updateHomeButtonTooltip() {
-    const homeBtn = document.getElementById('home-btn');
-    if (homeBtn) {
-      const hotkey = this.settingsManager.get('homeHotkey');
-      const hotkeyDisplay = this.getHotkeyDisplay(hotkey);
-      homeBtn.title = `Back to Home (${hotkeyDisplay})`;
-    }
-  }
-
-  /**
-   * Update shortcuts dialog with current home hotkey
-   */
-  updateShortcutsDialogHomeKey() {
-    const shortcutRow = document.getElementById('shortcut-home');
-    if (shortcutRow) {
-      const hotkey = this.settingsManager.get('homeHotkey');
-      const hotkeyDisplay = this.getHotkeyDisplay(hotkey);
-      shortcutRow.querySelector('td:first-child').innerHTML = `<kbd>${hotkeyDisplay}</kbd>`;
-    }
-  }
-
-  /**
-   * Get display string for a hotkey
-   */
-  getHotkeyDisplay(hotkey) {
-    switch (hotkey) {
-      case 'Escape': return 'Esc';
-      case 'Backspace': return 'Backspace';
-      case 'KeyH': return 'Ctrl+H';
-      default: return 'Esc';
-    }
   }
 }
 

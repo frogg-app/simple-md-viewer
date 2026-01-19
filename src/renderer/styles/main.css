@@ -362,40 +362,6 @@ kbd {
   position: relative;
 }
 
-/* Home button */
-.home-button {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 100;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-.home-button:hover {
-  background: var(--bg-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.home-button:active {
-  transform: translateY(0);
-}
-
-.home-icon {
-  font-size: 1.25rem;
-}
-
 #markdown-content {
   max-width: 900px;
   margin: 0 auto;

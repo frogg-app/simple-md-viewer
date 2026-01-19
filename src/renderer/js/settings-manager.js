@@ -7,8 +7,7 @@ export class SettingsManager {
     this.prefix = 'mdviewer_';
     this.defaults = {
       showDocsFolder: true,
-      showRecentFiles: true,
-      homeHotkey: 'Escape'
+      showRecentFiles: true
     };
   }
 
