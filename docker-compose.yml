@@ -13,7 +13,6 @@ services:
     environment:
       - NODE_ENV=production
       - DOCS_PATH=/app/docs
-      - PORT=37500
     restart: unless-stopped
     # Resource limits
     deploy:
