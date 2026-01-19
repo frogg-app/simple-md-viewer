@@ -1597,7 +1597,7 @@ app.listen(PORT, () => {
 
 ### 6.1 electron-builder.yml
 ```yaml
-appId: com.mdviewer.app
+appId: com.frogg.md.app
 productName: MD Viewer
 copyright: Copyright 2024
 

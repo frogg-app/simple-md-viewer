@@ -1,5 +1,5 @@
 {
-  "name": "md-viewer",
+  "name": "simple-md-viewer",
   "version": "1.0.0",
   "description": "Minimalist Markdown Viewer",
   "main": "src/main/index.js",

@@ -1,4 +1,4 @@
-# MD Viewer
+# Simple MD Viewer
 
 A minimalist markdown viewer with support for GitHub Flavored Markdown, Mermaid diagrams, syntax highlighting, and LaTeX math. Available as a Docker web app or Electron desktop application.
 
@@ -20,13 +20,13 @@ A minimalist markdown viewer with support for GitHub Flavored Markdown, Mermaid 
 
 ```bash
 # Clone the repository
-git clone https://github.com/example/md-viewer.git
-cd md-viewer
+git clone https://github.com/frogg-app/simple-md-viewer.git
+cd simple-md-viewer
 
 # Build and run with Docker Compose
 docker-compose up -d
 
-# Access at http://localhost:37500
+# Access at http://localhost:3000
 ```
 
 ### Manual Setup
@@ -64,12 +64,11 @@ services:
   md-viewer:
     build: .
     ports:
-      - "37500:37500"
+      - "3000:3000"
     volumes:
       # Mount your markdown files directory
       - ./docs:/app/docs:ro
     environment:
-      - PORT=37500
       - DOCS_PATH=/app/docs
 ```
 

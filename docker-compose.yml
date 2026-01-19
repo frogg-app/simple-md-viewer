@@ -1,8 +1,8 @@
 services:
-  md-viewer:
+  simple-md-viewer:
     build: .
-    image: md-viewer:latest
-    container_name: md-viewer
+    image: simple-md-viewer:latest
+    container_name: simple-md-viewer
     ports:
       - "37500:3000"
     volumes:
@@ -14,11 +14,3 @@ services:
       - NODE_ENV=production
       - DOCS_PATH=/app/docs
     restart: unless-stopped
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          memory: 128M
