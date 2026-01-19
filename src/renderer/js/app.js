@@ -5,6 +5,7 @@ import { FileHandler } from './file-handler.js';
 import { ToastNotifications } from './toast-notifications.js';
 import { RemoteDialog } from './remote-dialog.js';
 import { CredentialsDialog } from './credentials-dialog.js';
+import { SettingsManager } from './settings-manager.js';
 
 class App {
   constructor() {
@@ -15,6 +16,7 @@ class App {
     this.toast = new ToastNotifications();
     this.remoteDialog = new RemoteDialog();
     this.credentialsDialog = new CredentialsDialog();
+    this.settingsManager = new SettingsManager();
 
     this.currentFilePath = null;
     this.isRemoteFile = false;
@@ -29,17 +31,23 @@ class App {
     this.setupDragAndDrop();
     this.setupKeyboardShortcuts();
     this.setupDialogs();
+    this.setupSettingsDialog();
+    this.updateShortcutHint();
+    this.updateShortcutsDialog();
+    this.updateHomeButtonTooltip();
+    this.updateShortcutsDialogHomeKey();
+    this.loadSectionVisibility();
+
+    // Load docs folder in web mode
+    if (!this.isElectron()) {
+      await this.loadDocsFolder();
+    }
   }
 
   async loadInitialState() {
     if (this.isElectron()) {
       const state = await window.electronAPI.getInitialState();
-      this.themeManager.setTheme(state.theme, state.systemTheme);
       this.updateRecentFiles(state.recentFiles);
-    } else {
-      // Web mode
-      const theme = localStorage.getItem('mdviewer_theme') || 'system';
-      this.themeManager.setTheme(theme);
     }
   }
 
@@ -184,17 +192,38 @@ class App {
         this.resetZoom();
       }
 
-      // Ctrl/Cmd + Shift + T: Toggle theme
-      if ((e.ctrlKey || e.metaKey) && e.key === 'T' && e.shiftKey) {
-        e.preventDefault();
-        this.themeManager.toggleTheme();
-      }
+      // Configurable home hotkey
+      const homeHotkey = this.settingsManager.get('homeHotkey');
+      const isHomeHotkey = this.matchesHotkey(e, homeHotkey);
 
-      // Escape: Close dialogs
-      if (e.key === 'Escape') {
-        this.closeAllDialogs();
+      if (isHomeHotkey) {
+        // First close any open dialogs
+        const openDialogs = document.querySelectorAll('dialog[open]');
+        if (openDialogs.length > 0) {
+          this.closeAllDialogs();
+        } else if (this.currentFilePath) {
+          // If no dialogs open and viewing a file, go home
+          e.preventDefault();
+          this.goHome();
+        }
       }
     });
+  }
+
+  /**
+   * Check if a keyboard event matches a hotkey setting
+   */
+  matchesHotkey(e, hotkey) {
+    switch (hotkey) {
+      case 'Escape':
+        return e.key === 'Escape';
+      case 'Backspace':
+        return e.key === 'Backspace' && !e.target.matches('input, textarea, [contenteditable]');
+      case 'KeyH':
+        return (e.ctrlKey || e.metaKey) && e.key === 'h';
+      default:
+        return e.key === 'Escape';
+    }
   }
 
   setupDialogs() {
@@ -207,6 +236,12 @@ class App {
     document.getElementById('about-close').addEventListener('click', () => {
       document.getElementById('about-dialog').close();
     });
+
+    // Home button
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', () => this.goHome());
+    }
   }
 
   async openFile(filePath) {
@@ -437,6 +472,270 @@ class App {
 
   closeAllDialogs() {
     document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close());
+  }
+
+  /**
+   * Go back to the home/welcome screen
+   */
+  goHome() {
+    this.currentFilePath = null;
+    this.isRemoteFile = false;
+
+    // Hide content, show empty state
+    document.getElementById('content').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+
+    // Reset title
+    document.title = 'MD Viewer';
+
+    // Clear rendered content
+    const markdownContent = document.getElementById('markdown-content');
+    if (markdownContent) {
+      markdownContent.innerHTML = '';
+    }
+
+    // Reload docs folder in web mode
+    if (!this.isElectron()) {
+      this.loadDocsFolder();
+    }
+  }
+
+  /**
+   * Update the shortcut hint based on mode (Electron vs Web)
+   */
+  updateShortcutHint() {
+    const hint = document.getElementById('shortcut-hint');
+    if (!hint) return;
+
+    if (this.isElectron()) {
+      hint.innerHTML = 'or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to open';
+    } else {
+      hint.innerHTML = 'or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> to open remote file';
+    }
+  }
+
+  /**
+   * Update shortcuts dialog to hide Ctrl+O on web mode
+   */
+  updateShortcutsDialog() {
+    const ctrlORow = document.getElementById('shortcut-ctrl-o');
+    if (ctrlORow) {
+      ctrlORow.style.display = this.isElectron() ? '' : 'none';
+    }
+  }
+
+  /**
+   * Load docs folder contents (web mode only)
+   */
+  async loadDocsFolder() {
+    try {
+      const response = await fetch('/api/files');
+      if (!response.ok) {
+        throw new Error('Failed to fetch docs folder');
+      }
+      const files = await response.json();
+      this.updateDocsFiles(files);
+    } catch (err) {
+      console.error('Failed to load docs:', err);
+      this.updateDocsFiles([]);
+    }
+  }
+
+  /**
+   * Update the docs files list UI
+   */
+  updateDocsFiles(files) {
+    const list = document.getElementById('docs-files-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    if (!files || files.length === 0) {
+      list.innerHTML = '<li class="no-files">No files in docs folder</li>';
+      return;
+    }
+
+    files.slice(0, 10).forEach(file => {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.textContent = file.name || file.path || file;
+      button.onclick = () => this.openDocsFile(file.path || file);
+      li.appendChild(button);
+      list.appendChild(li);
+    });
+  }
+
+  /**
+   * Open a file from the docs folder
+   */
+  async openDocsFile(path) {
+    try {
+      this.showLoading('Loading file...');
+      const response = await fetch(`/api/file?path=${encodeURIComponent(path)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+      const data = await response.json();
+      this.handleFileOpened({
+        content: data.content,
+        path: data.path || path,
+        fileName: data.fileName || path.split('/').pop(),
+        isRemote: false
+      });
+    } catch (err) {
+      console.error('Failed to open docs file:', err);
+      this.toast.show(`Failed to open file: ${err.message}`, 'error');
+    } finally {
+      this.hideLoading();
+    }
+  }
+
+  /**
+   * Load section visibility from settings
+   */
+  loadSectionVisibility() {
+    const showDocs = this.settingsManager.get('showDocsFolder');
+    const showRecent = this.settingsManager.get('showRecentFiles');
+
+    const docsSection = document.getElementById('docs-section');
+    const recentSection = document.getElementById('recent-section');
+
+    if (docsSection) {
+      docsSection.style.display = showDocs ? '' : 'none';
+    }
+    if (recentSection) {
+      recentSection.style.display = showRecent ? '' : 'none';
+    }
+
+    // Update checkbox states
+    const showDocsCheckbox = document.getElementById('show-docs');
+    const showRecentCheckbox = document.getElementById('show-recent');
+
+    if (showDocsCheckbox) {
+      showDocsCheckbox.checked = showDocs;
+    }
+    if (showRecentCheckbox) {
+      showRecentCheckbox.checked = showRecent;
+    }
+
+    this.updateSectionsLayout();
+  }
+
+  /**
+   * Update files-sections layout based on visible sections
+   */
+  updateSectionsLayout() {
+    const container = document.querySelector('.files-sections');
+    if (!container) return;
+
+    const showDocs = this.settingsManager.get('showDocsFolder');
+    const showRecent = this.settingsManager.get('showRecentFiles');
+    const visibleCount = (showDocs ? 1 : 0) + (showRecent ? 1 : 0);
+
+    container.classList.toggle('single-section', visibleCount === 1);
+  }
+
+  /**
+   * Setup settings dialog handlers
+   */
+  setupSettingsDialog() {
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsDialog = document.getElementById('settings-dialog');
+    const settingsClose = document.getElementById('settings-close');
+    const showDocsCheckbox = document.getElementById('show-docs');
+    const showRecentCheckbox = document.getElementById('show-recent');
+    const homeHotkeySelect = document.getElementById('home-hotkey');
+
+    // Open settings dialog
+    if (settingsBtn && settingsDialog) {
+      settingsBtn.addEventListener('click', () => {
+        // Set current hotkey value
+        const currentHotkey = this.settingsManager.get('homeHotkey');
+        if (homeHotkeySelect) {
+          homeHotkeySelect.value = currentHotkey;
+        }
+        settingsDialog.showModal();
+      });
+    }
+
+    // Close settings dialog
+    if (settingsClose && settingsDialog) {
+      settingsClose.addEventListener('click', () => {
+        settingsDialog.close();
+      });
+    }
+
+    // Show docs folder toggle
+    if (showDocsCheckbox) {
+      showDocsCheckbox.addEventListener('change', () => {
+        const show = showDocsCheckbox.checked;
+        this.settingsManager.set('showDocsFolder', show);
+        const docsSection = document.getElementById('docs-section');
+        if (docsSection) {
+          docsSection.style.display = show ? '' : 'none';
+        }
+        this.updateSectionsLayout();
+      });
+    }
+
+    // Show recent files toggle
+    if (showRecentCheckbox) {
+      showRecentCheckbox.addEventListener('change', () => {
+        const show = showRecentCheckbox.checked;
+        this.settingsManager.set('showRecentFiles', show);
+        const recentSection = document.getElementById('recent-section');
+        if (recentSection) {
+          recentSection.style.display = show ? '' : 'none';
+        }
+        this.updateSectionsLayout();
+      });
+    }
+
+    // Home hotkey change handler
+    if (homeHotkeySelect) {
+      homeHotkeySelect.addEventListener('change', () => {
+        const hotkey = homeHotkeySelect.value;
+        this.settingsManager.set('homeHotkey', hotkey);
+        this.updateHomeButtonTooltip();
+        this.updateShortcutsDialogHomeKey();
+      });
+    }
+  }
+
+  /**
+   * Update the home button tooltip with current hotkey
+   */
+  updateHomeButtonTooltip() {
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+      const hotkey = this.settingsManager.get('homeHotkey');
+      const hotkeyDisplay = this.getHotkeyDisplay(hotkey);
+      homeBtn.title = `Back to Home (${hotkeyDisplay})`;
+    }
+  }
+
+  /**
+   * Update shortcuts dialog with current home hotkey
+   */
+  updateShortcutsDialogHomeKey() {
+    const shortcutRow = document.getElementById('shortcut-home');
+    if (shortcutRow) {
+      const hotkey = this.settingsManager.get('homeHotkey');
+      const hotkeyDisplay = this.getHotkeyDisplay(hotkey);
+      shortcutRow.querySelector('td:first-child').innerHTML = `<kbd>${hotkeyDisplay}</kbd>`;
+    }
+  }
+
+  /**
+   * Get display string for a hotkey
+   */
+  getHotkeyDisplay(hotkey) {
+    switch (hotkey) {
+      case 'Escape': return 'Esc';
+      case 'Backspace': return 'Backspace';
+      case 'KeyH': return 'Ctrl+H';
+      default: return 'Esc';
+    }
   }
 }
 

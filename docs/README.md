@@ -1,6 +1,30 @@
-# Markdown Test File
+# MD Viewer
 
-This is a comprehensive test file for the MD Viewer application.
+A minimalist markdown viewer with support for GitHub Flavored Markdown, Mermaid diagrams, syntax highlighting, and LaTeX math.
+
+## How to Load Files
+
+### Docs Folder
+Place markdown files in the `docs/` folder - they'll appear in the "Docs Folder" section on the welcome screen.
+
+```bash
+# Copy a file to the docs folder
+cp /path/to/your/file.md /path/to/md-viewer/docs/
+```
+
+### Drag & Drop
+Drag any `.md` file from your file manager onto the browser window.
+
+### Remote File (Ctrl+Shift+O)
+Opens a dialog to connect via SSH/SFTP, SMB, or NFS to fetch files from remote servers.
+
+### Direct API URL
+For files in the docs folder, link directly:
+```
+https://example.com/api/file?path=filename.md
+```
+
+---
 
 ## Text Formatting
 
@@ -99,13 +123,65 @@ $$
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
 $$
 
+## Mermaid Diagrams
+
+### Flowchart
+
+```mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+    C --> E[End]
+```
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant Server
+    User->>App: Open file
+    App->>Server: Request content
+    Server-->>App: Return markdown
+    App-->>User: Render document
+```
+
+### Pie Chart
+
+```mermaid
+pie title MD Viewer Features
+    "Markdown" : 30
+    "Mermaid" : 25
+    "KaTeX" : 20
+    "Themes" : 15
+    "Remote Files" : 10
+```
+
+### Git Graph
+
+```mermaid
+gitGraph
+    commit
+    commit
+    branch feature
+    checkout feature
+    commit
+    commit
+    checkout main
+    merge feature
+    commit
+```
+
 ## Horizontal Rule
 
 ---
 
 ## Images
 
-![Placeholder Image](https://via.placeholder.com/400x200)
+![Placeholder Image](https://placehold.co/400x200/EEE/31343C)
 
 ## Special Characters
 

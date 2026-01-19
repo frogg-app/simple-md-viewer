@@ -6,13 +6,16 @@ services:
     image: md-viewer:latest
     container_name: md-viewer
     ports:
-      - "3000:3000"
+      - "2614:2614"
     volumes:
       # Mount directory containing markdown files (read-only)
       - ./docs:/app/docs:ro
+      # Mount dist/web for development (rebuild not required)
+      - ./dist/web:/app/dist/web:ro
     environment:
       - NODE_ENV=production
       - DOCS_PATH=/app/docs
+      - PORT=2614
     restart: unless-stopped
     # Resource limits
     deploy:
