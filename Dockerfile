@@ -14,6 +14,7 @@ COPY . .
 # Build web version
 RUN npm run build:web
 
+
 # Production stage
 FROM node:20-alpine
 WORKDIR /app
@@ -22,19 +23,16 @@ WORKDIR /app
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-# Copy package files and install production dependencies only
+# Copy package files and install production deps only
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Copy built files
-COPY --from=builder /app/dist/web ./dist/web
-COPY --from=builder /app/src/server ./src/server
-
-# Set ownership
-RUN chown -R appuser:appgroup /app
-
-# Create docs directory with proper permissions
+# Create docs directory and set ownership (small, fast)
 RUN mkdir -p /app/docs && chown -R appuser:appgroup /app/docs
+
+# Copy built files with correct ownership (no recursive chown needed)
+COPY --from=builder --chown=appuser:appgroup /app/dist/web ./dist/web
+COPY --from=builder --chown=appuser:appgroup /app/src/server ./src/server
 
 USER appuser
 
