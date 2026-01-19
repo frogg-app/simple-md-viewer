@@ -848,7 +848,7 @@ class App {
    * Setup settings dialog handlers
    */
   setupSettingsDialog() {
-    const settingsBtn = document.getElementById('settings-btn');
+    const settingsBtn = document.getElementById('menu-settings');
     const settingsDialog = document.getElementById('settings-dialog');
     const settingsClose = document.getElementById('settings-close');
     const showDocsCheckbox = document.getElementById('show-docs');
