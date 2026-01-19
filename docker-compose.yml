@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   md-viewer:
     build: .
     image: md-viewer:latest
     container_name: md-viewer
     ports:
-      - "37500:37500"
+      - "37500:3000"
     volumes:
       # Mount directory containing markdown files (read-only)
       - ./docs:/app/docs:ro
