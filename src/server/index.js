@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Serve static files from the dist directory
-const distPath = path.join(__dirname, '../dist');
+const distPath = path.join(__dirname, '../../dist');
 app.use(express.static(distPath));
 
 // Also serve from dist/web for Docker builds
