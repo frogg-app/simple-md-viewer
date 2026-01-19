@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data: file: https:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; img-src 'self' data: file: https:; font-src 'self' data:;">
   <title>MD Viewer</title>
   <link rel="stylesheet" href="./styles/main.css">
+  <link rel="stylesheet" href="./styles/menu.css">
   <link rel="stylesheet" href="./styles/markdown.css">
   <link rel="stylesheet" href="./styles/mermaid.css">
   <link rel="stylesheet" href="./styles/dialogs.css">
@@ -13,6 +14,89 @@
   <link rel="stylesheet" href="./styles/themes/dark.css">
 </head>
 <body>
+  <!-- Menu Bar -->
+  <nav id="menu-bar">
+    <div class="menu-item">
+      <button class="menu-button" aria-haspopup="true" aria-expanded="false">File</button>
+      <ul class="menu-dropdown" role="menu">
+        <li role="menuitem">
+          <button id="menu-open-local" class="menu-action">
+            <span>Open Local File</span>
+            <span class="menu-shortcut">Ctrl+O</span>
+          </button>
+        </li>
+        <li role="menuitem" class="electron-only">
+          <button id="menu-open-remote" class="menu-action">
+            <span>Open Remote File</span>
+            <span class="menu-shortcut">Ctrl+Shift+O</span>
+          </button>
+        </li>
+        <li role="separator" class="menu-separator"></li>
+        <li role="menuitem">
+          <button id="menu-reload" class="menu-action" disabled>
+            <span>Reload</span>
+            <span class="menu-shortcut">Ctrl+R</span>
+          </button>
+        </li>
+        <li role="menuitem">
+          <button id="menu-close" class="menu-action" disabled>
+            <span>Close/Disconnect</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="menu-item">
+      <button class="menu-button" aria-haspopup="true" aria-expanded="false">View</button>
+      <ul class="menu-dropdown" role="menu">
+        <li role="menuitem">
+          <button id="menu-zoom-in" class="menu-action">
+            <span>Zoom In</span>
+            <span class="menu-shortcut">Ctrl++</span>
+          </button>
+        </li>
+        <li role="menuitem">
+          <button id="menu-zoom-out" class="menu-action">
+            <span>Zoom Out</span>
+            <span class="menu-shortcut">Ctrl+-</span>
+          </button>
+        </li>
+        <li role="menuitem">
+          <button id="menu-zoom-reset" class="menu-action">
+            <span>Reset Zoom</span>
+            <span class="menu-shortcut">Ctrl+0</span>
+          </button>
+        </li>
+        <li role="separator" class="menu-separator"></li>
+        <li role="menuitem">
+          <button id="menu-toggle-theme" class="menu-action">
+            <span>Toggle Theme</span>
+            <span class="menu-shortcut">Ctrl+Shift+T</span>
+          </button>
+        </li>
+        <li role="menuitem">
+          <button id="menu-fullscreen" class="menu-action">
+            <span>Toggle Fullscreen</span>
+            <span class="menu-shortcut">F11</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="menu-item">
+      <button class="menu-button" aria-haspopup="true" aria-expanded="false">Help</button>
+      <ul class="menu-dropdown" role="menu">
+        <li role="menuitem">
+          <button id="menu-shortcuts" class="menu-action">
+            <span>Keyboard Shortcuts</span>
+          </button>
+        </li>
+        <li role="menuitem">
+          <button id="menu-about" class="menu-action">
+            <span>About</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </nav>
   <div id="app">
     <!-- Loading overlay -->
     <div id="loading-overlay" class="hidden">

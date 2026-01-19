@@ -29,10 +29,12 @@ class App {
     this.setupDragAndDrop();
     this.setupKeyboardShortcuts();
     this.setupDialogs();
+    this.setupMenuBar();
   }
 
   async loadInitialState() {
     if (this.isElectron()) {
+      document.body.classList.add('electron-mode');
       const state = await window.electronAPI.getInitialState();
       this.themeManager.setTheme(state.theme, state.systemTheme);
       this.updateRecentFiles(state.recentFiles);
@@ -231,6 +233,9 @@ class App {
       document.title = `${data.fileName} - MD Viewer`;
     }
 
+    // Update menu state
+    this.updateMenuState();
+
     // Show toast
     this.toast.show(`Opened ${data.fileName}`, 'success');
   }
@@ -296,6 +301,7 @@ class App {
     this.isRemoteFile = false;
     document.getElementById('content').classList.add('hidden');
     document.getElementById('empty-state').classList.remove('hidden');
+    this.updateMenuState();
     this.toast.show('Disconnected from remote', 'info');
   }
 
@@ -432,6 +438,179 @@ class App {
     if (this.isElectron()) {
       await window.electronAPI.clearAllCredentials();
       this.toast.show('All saved credentials cleared', 'success');
+    }
+  }
+
+  setupMenuBar() {
+    // Menu dropdowns
+    const menuItems = document.querySelectorAll('.menu-item');
+    let activeMenu = null;
+
+    menuItems.forEach(item => {
+      const button = item.querySelector('.menu-button');
+      const dropdown = item.querySelector('.menu-dropdown');
+
+      // Click to toggle menu
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        if (activeMenu === item) {
+          this.closeMenu(item);
+          activeMenu = null;
+        } else {
+          if (activeMenu) {
+            this.closeMenu(activeMenu);
+          }
+          this.openMenu(item);
+          activeMenu = item;
+        }
+      });
+
+      // Hover to switch between menus when one is open
+      button.addEventListener('mouseenter', () => {
+        if (activeMenu && activeMenu !== item) {
+          this.closeMenu(activeMenu);
+          this.openMenu(item);
+          activeMenu = item;
+        }
+      });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (activeMenu && !activeMenu.contains(e.target)) {
+        this.closeMenu(activeMenu);
+        activeMenu = null;
+      }
+    });
+
+    // Setup menu actions
+    this.setupMenuActions();
+
+    // Update menu state when file is opened/closed
+    this.updateMenuState();
+  }
+
+  openMenu(menuItem) {
+    menuItem.classList.add('active');
+    const button = menuItem.querySelector('.menu-button');
+    button.setAttribute('aria-expanded', 'true');
+  }
+
+  closeMenu(menuItem) {
+    menuItem.classList.remove('active');
+    const button = menuItem.querySelector('.menu-button');
+    button.setAttribute('aria-expanded', 'false');
+  }
+
+  setupMenuActions() {
+    // File menu
+    document.getElementById('menu-open-local').addEventListener('click', async () => {
+      if (this.isElectron()) {
+        await window.electronAPI.openFileDialog();
+      } else {
+        // Web mode: create file input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.md,.markdown';
+        input.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              this.handleFileOpened({
+                content: event.target.result,
+                path: file.name,
+                fileName: file.name,
+                isRemote: false
+              });
+            };
+            reader.readAsText(file);
+          }
+        };
+        input.click();
+      }
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-open-remote').addEventListener('click', () => {
+      this.remoteDialog.show();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-reload').addEventListener('click', async () => {
+      if (this.currentFilePath && this.isElectron()) {
+        await window.electronAPI.reloadFile();
+      }
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-close').addEventListener('click', async () => {
+      if (this.isElectron() && this.isRemoteFile) {
+        await window.electronAPI.disconnectRemote();
+      } else {
+        this.handleDisconnected();
+      }
+      this.closeAllMenus();
+    });
+
+    // View menu
+    document.getElementById('menu-zoom-in').addEventListener('click', () => {
+      this.zoomIn();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-zoom-out').addEventListener('click', () => {
+      this.zoomOut();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-zoom-reset').addEventListener('click', () => {
+      this.resetZoom();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-toggle-theme').addEventListener('click', () => {
+      this.themeManager.toggleTheme();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-fullscreen').addEventListener('click', () => {
+      this.toggleFullscreen();
+      this.closeAllMenus();
+    });
+
+    // Help menu
+    document.getElementById('menu-shortcuts').addEventListener('click', () => {
+      this.showShortcutsDialog();
+      this.closeAllMenus();
+    });
+
+    document.getElementById('menu-about').addEventListener('click', () => {
+      this.showAboutDialog();
+      this.closeAllMenus();
+    });
+  }
+
+  closeAllMenus() {
+    document.querySelectorAll('.menu-item').forEach(item => {
+      this.closeMenu(item);
+    });
+  }
+
+  updateMenuState() {
+    const hasFile = !!this.currentFilePath;
+    document.getElementById('menu-reload').disabled = !hasFile;
+    document.getElementById('menu-close').disabled = !hasFile;
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
     }
   }
 
