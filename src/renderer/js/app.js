@@ -19,6 +19,7 @@ class App {
     this.currentFilePath = null;
     this.isRemoteFile = false;
     this.pageZoom = 1;
+    this.activeMenu = null;
 
     this.init();
   }
@@ -444,7 +445,6 @@ class App {
   setupMenuBar() {
     // Menu dropdowns
     const menuItems = document.querySelectorAll('.menu-item');
-    let activeMenu = null;
 
     menuItems.forEach(item => {
       const button = item.querySelector('.menu-button');
@@ -454,33 +454,33 @@ class App {
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         
-        if (activeMenu === item) {
+        if (this.activeMenu === item) {
           this.closeMenu(item);
-          activeMenu = null;
+          this.activeMenu = null;
         } else {
-          if (activeMenu) {
-            this.closeMenu(activeMenu);
+          if (this.activeMenu) {
+            this.closeMenu(this.activeMenu);
           }
           this.openMenu(item);
-          activeMenu = item;
+          this.activeMenu = item;
         }
       });
 
       // Hover to switch between menus when one is open
       button.addEventListener('mouseenter', () => {
-        if (activeMenu && activeMenu !== item) {
-          this.closeMenu(activeMenu);
+        if (this.activeMenu && this.activeMenu !== item) {
+          this.closeMenu(this.activeMenu);
           this.openMenu(item);
-          activeMenu = item;
+          this.activeMenu = item;
         }
       });
     });
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-      if (activeMenu && !activeMenu.contains(e.target)) {
-        this.closeMenu(activeMenu);
-        activeMenu = null;
+      if (this.activeMenu && !this.activeMenu.contains(e.target)) {
+        this.closeMenu(this.activeMenu);
+        this.activeMenu = null;
       }
     });
 
@@ -524,6 +524,9 @@ class App {
                 fileName: file.name,
                 isRemote: false
               });
+            };
+            reader.onerror = () => {
+              this.showError(`Failed to read file: ${file.name}`);
             };
             reader.readAsText(file);
           }
