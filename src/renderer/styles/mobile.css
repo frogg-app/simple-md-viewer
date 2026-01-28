@@ -1,0 +1,385 @@
+/* Mobile-specific styles for polished app experience */
+
+/* Mobile Menu Bar - Compact & Touch-Friendly */
+@media (max-width: 768px) {
+  #menu-bar {
+    height: 48px;
+    padding: 0 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .menu-button {
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    min-height: 44px; /* Touch target size */
+    min-width: 44px;
+  }
+
+  .menu-dropdown {
+    min-width: 200px;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .menu-action {
+    min-height: 44px; /* Touch target size */
+    padding: 0.75rem 1rem;
+  }
+
+  .menu-shortcut {
+    display: none; /* Hide shortcuts on mobile */
+  }
+}
+
+/* Mobile Empty State */
+@media (max-width: 768px) {
+  #empty-state {
+    padding: 1rem;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+  }
+
+  #empty-state h2 {
+    font-size: 1.25rem;
+  }
+
+  #empty-state p {
+    font-size: 0.875rem;
+  }
+
+  .files-sections {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .recent-files,
+  .docs-files {
+    max-width: 100%;
+  }
+}
+
+/* Mobile Content Area - Better Reading Experience */
+@media (max-width: 768px) {
+  #content {
+    padding: 1rem;
+  }
+
+  #markdown-content {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Improve code blocks on mobile */
+  #markdown-content pre {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #markdown-content table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mobile Dialogs - Full Screen on Small Devices */
+@media (max-width: 640px) {
+  dialog {
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  dialog form {
+    max-height: calc(100vh - 3rem);
+    padding: 1rem;
+  }
+
+  dialog h3 {
+    font-size: 1.125rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-row .form-group {
+    flex: 1 !important;
+  }
+
+  .dialog-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .dialog-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Remote dialog adjustments */
+  #remote-dialog {
+    width: 100vw;
+  }
+
+  .file-list {
+    max-height: 40vh;
+  }
+}
+
+/* Mobile Toast Notifications */
+@media (max-width: 768px) {
+  #toast-container {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+
+  .toast {
+    max-width: 100%;
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* Mobile Banners */
+@media (max-width: 768px) {
+  #error-banner,
+  #connection-banner {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .error-message,
+  .connection-message {
+    flex: 1 1 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .connection-retry {
+    min-width: 60px;
+  }
+}
+
+/* Touch-friendly buttons and controls */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device specific styles */
+  .btn-primary,
+  .btn-secondary,
+  .icon-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  #recent-files-list li button,
+  #docs-files-list li button {
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  .file-item {
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  /* Increase tap targets */
+  .menu-action {
+    min-height: 48px;
+  }
+
+  /* Remove hover states on touch devices */
+  .menu-button:hover,
+  .menu-action:hover,
+  .btn-secondary:hover,
+  .icon-btn:hover {
+    background: inherit;
+  }
+
+  /* Active states for touch feedback */
+  .menu-button:active,
+  .btn-primary:active,
+  .btn-secondary:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  #menu-bar {
+    height: 40px;
+  }
+
+  #content {
+    padding: 0.75rem;
+  }
+
+  dialog form {
+    max-height: calc(100vh - 2rem);
+  }
+
+  .file-list {
+    max-height: 30vh;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  #menu-bar {
+    height: 44px;
+  }
+
+  .menu-button {
+    font-size: 0.8125rem;
+    padding: 0 0.5rem;
+  }
+
+  #empty-state h2 {
+    font-size: 1.125rem;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+  }
+
+  kbd {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75em;
+  }
+
+  .shortcuts-table td {
+    font-size: 0.875rem;
+  }
+}
+
+/* Very small devices - compact mode */
+@media (max-width: 360px) {
+  html {
+    font-size: 13px;
+  }
+
+  #menu-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .files-sections {
+    gap: 0.75rem;
+  }
+
+  dialog form {
+    padding: 0.75rem;
+  }
+}
+
+/* Tablet - Medium screens */
+@media (min-width: 641px) and (max-width: 1024px) {
+  #content {
+    padding: 1.5rem;
+  }
+
+  #markdown-content {
+    max-width: 100%;
+  }
+
+  dialog {
+    max-width: 85vw;
+  }
+
+  #remote-dialog {
+    width: 550px;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+  #menu-bar {
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  #content {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  #toast-container {
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* High DPI / Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure borders and small elements are crisp */
+  .menu-separator,
+  .setting-row {
+    border-width: 0.5px;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .toast {
+    transition: none;
+  }
+
+  .loading-spinner {
+    animation: none;
+  }
+}
+
+/* Dark mode specific mobile adjustments */
+@media (max-width: 768px) {
+  [data-theme="dark"] dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  [data-theme="dark"] .menu-dropdown {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* PWA specific styles - Hide when installed */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  #markdown-content {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+/* Orientation change handling */
+@media (orientation: portrait) {
+  .files-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1024px) {
+  .files-sections {
+    grid-template-columns: 1fr 1fr;
+  }
+}
