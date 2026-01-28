@@ -74,13 +74,11 @@
   /* Improve code blocks on mobile */
   #markdown-content pre {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   #markdown-content table {
     display: block;
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -110,7 +108,7 @@
   }
 
   .form-row .form-group {
-    flex: 1 !important;
+    flex: 1;
   }
 
   .dialog-actions {
@@ -270,7 +268,6 @@
 
   #menu-bar {
     overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   .files-sections {
@@ -331,10 +328,14 @@
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .toast,
+  .loading-spinner,
+  .menu-dropdown,
+  dialog,
+  #app::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
 
   .toast {

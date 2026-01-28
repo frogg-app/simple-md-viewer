@@ -23,9 +23,7 @@ test.describe('App Screenshots - Complete Flow', () => {
   test('02 - Welcome Screen with Docs Folder', async ({ page }, testInfo) => {
     await page.goto('/');
     await page.waitForSelector('#empty-state', { state: 'visible' });
-    
-    // Wait a bit for any dynamic content to load
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('networkidle');
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/02-welcome-with-docs.png`,
@@ -51,9 +49,9 @@ test.describe('App Screenshots - Complete Flow', () => {
     await page.goto('/');
     await page.waitForSelector('#menu-bar', { state: 'visible' });
     
-    // Click the View menu
+    // Click the View menu and wait for dropdown to appear
     await page.click('text=View');
-    await page.waitForTimeout(500);
+    await page.waitForSelector('.menu-item.active .menu-dropdown', { state: 'visible', timeout: 2000 }).catch(() => {});
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/04-view-menu.png`,
@@ -65,9 +63,9 @@ test.describe('App Screenshots - Complete Flow', () => {
     await page.goto('/');
     await page.waitForSelector('#menu-bar', { state: 'visible' });
     
-    // Click the Help menu
+    // Click the Help menu and wait for dropdown to appear
     await page.click('text=Help');
-    await page.waitForTimeout(500);
+    await page.waitForSelector('.menu-item.active .menu-dropdown', { state: 'visible', timeout: 2000 }).catch(() => {});
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/05-help-menu.png`,
@@ -81,12 +79,11 @@ test.describe('App Screenshots - Complete Flow', () => {
     
     // Open File menu and click Settings
     await page.click('text=File');
-    await page.waitForSelector('.menu-dropdown', { state: 'visible' });
+    await page.waitForSelector('.menu-item.active .menu-dropdown', { state: 'visible', timeout: 2000 }).catch(() => {});
     await page.click('#menu-settings');
     
     // Wait for dialog to open
     await page.waitForSelector('#settings-dialog[open]', { state: 'visible' });
-    await page.waitForTimeout(300);
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/06-settings-dialog.png`,
@@ -100,12 +97,11 @@ test.describe('App Screenshots - Complete Flow', () => {
     
     // Open Help menu and click Shortcuts
     await page.click('text=Help');
-    await page.waitForTimeout(500);
+    await page.waitForSelector('.menu-item.active .menu-dropdown', { state: 'visible', timeout: 2000 }).catch(() => {});
     await page.click('#menu-shortcuts');
     
     // Wait for dialog to open
     await page.waitForSelector('#shortcuts-dialog[open]', { state: 'visible' });
-    await page.waitForTimeout(300);
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/07-shortcuts-dialog.png`,
@@ -119,12 +115,11 @@ test.describe('App Screenshots - Complete Flow', () => {
     
     // Open Help menu and click About
     await page.click('text=Help');
-    await page.waitForTimeout(500);
+    await page.waitForSelector('.menu-item.active .menu-dropdown', { state: 'visible', timeout: 2000 }).catch(() => {});
     await page.click('#menu-about');
     
     // Wait for dialog to open
     await page.waitForSelector('#about-dialog[open]', { state: 'visible' });
-    await page.waitForTimeout(300);
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/08-about-dialog.png`,
@@ -136,7 +131,6 @@ test.describe('App Screenshots - Complete Flow', () => {
     await page.goto('/');
     await page.waitForSelector('#empty-state', { state: 'visible' });
     
-    // Create sample markdown content via drag and drop simulation
     const markdownContent = `# Sample Markdown Document
 
 This is a **bold** statement and this is *italic* text.
@@ -168,38 +162,24 @@ function hello() {
 
 Visit [GitHub](https://github.com) for more info.`;
 
-    // Inject the markdown content directly
-    await page.evaluate((content) => {
+    // Use the app's built-in markdown renderer
+    await page.evaluate(async (content) => {
       const emptyState = document.getElementById('empty-state');
       const contentArea = document.getElementById('content');
-      const markdownContent = document.getElementById('markdown-content');
+      const markdownContentEl = document.getElementById('markdown-content');
       
-      if (emptyState && contentArea && markdownContent) {
+      if (emptyState && contentArea && markdownContentEl && window.app && window.app.markdownRenderer) {
         emptyState.classList.add('hidden');
         contentArea.classList.remove('hidden');
         
-        // Manually render simple markdown for the screenshot
-        markdownContent.innerHTML = content
-          .replace(/#{3} (.*)/g, '<h3>$1</h3>')
-          .replace(/#{2} (.*)/g, '<h2>$1</h2>')
-          .replace(/#{1} (.*)/g, '<h1>$1</h1>')
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-          .replace(/^- (.*)/gm, '<li>$1</li>')
-          .replace(/```javascript\n([\s\S]*?)```/g, '<pre><code class="language-javascript">$1</code></pre>')
-          .replace(/> (.*)/g, '<blockquote>$1</blockquote>')
-          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-          .replace(/\n\n/g, '</p><p>')
-          .replace(/^\|(.+)\|$/gm, (match) => {
-            const cells = match.split('|').filter(s => s.trim());
-            return '<tr>' + cells.map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
-          });
-        
-        markdownContent.innerHTML = '<div class="markdown-body">' + markdownContent.innerHTML + '</div>';
+        // Use the app's markdown renderer
+        const html = await window.app.markdownRenderer.render(content, null);
+        markdownContentEl.innerHTML = html;
       }
     }, markdownContent);
     
-    await page.waitForTimeout(500);
+    // Wait for content to be rendered
+    await page.waitForSelector('#markdown-content h1', { state: 'visible' });
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/09-markdown-content.png`,
@@ -225,22 +205,23 @@ This is section ${i + 1} with some content. Lorem ipsum dolor sit amet, consecte
 
 `).join('\n')}`;
 
-    await page.evaluate((content) => {
+    await page.evaluate(async (content) => {
       const emptyState = document.getElementById('empty-state');
       const contentArea = document.getElementById('content');
-      const markdownContent = document.getElementById('markdown-content');
+      const markdownContentEl = document.getElementById('markdown-content');
       
-      if (emptyState && contentArea && markdownContent) {
+      if (emptyState && contentArea && markdownContentEl && window.app && window.app.markdownRenderer) {
         emptyState.classList.add('hidden');
         contentArea.classList.remove('hidden');
-        markdownContent.innerHTML = '<div class="markdown-body">' + content
-          .replace(/#{2} (.*)/g, '<h2>$1</h2>')
-          .replace(/#{1} (.*)/g, '<h1>$1</h1>')
-          .replace(/^- (.*)/gm, '<li>$1</li>') + '</div>';
+        
+        // Use the app's markdown renderer
+        const html = await window.app.markdownRenderer.render(content, null);
+        markdownContentEl.innerHTML = html;
       }
     }, longContent);
     
-    await page.waitForTimeout(500);
+    // Wait for content to be rendered
+    await page.waitForSelector('#markdown-content h1', { state: 'visible' });
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/10-long-markdown.png`,
@@ -266,7 +247,8 @@ This is section ${i + 1} with some content. Lorem ipsum dolor sit amet, consecte
       }
     });
     
-    await page.waitForTimeout(500);
+    // Wait for toast to be visible
+    await page.waitForSelector('.toast.show', { state: 'visible' });
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/11-toast-notification.png`,
@@ -285,7 +267,8 @@ This is section ${i + 1} with some content. Lorem ipsum dolor sit amet, consecte
       }
     });
     
-    await page.waitForTimeout(500);
+    // Wait for overlay to be visible
+    await page.waitForSelector('#loading-overlay:not(.hidden)', { state: 'visible' });
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/12-loading-overlay.png`,
@@ -319,7 +302,10 @@ This is section ${i + 1} with some content. Lorem ipsum dolor sit amet, consecte
       document.documentElement.setAttribute('data-theme', 'light');
     });
     
-    await page.waitForTimeout(300);
+    // Wait for theme to be applied
+    await page.waitForFunction(() => {
+      return document.documentElement.getAttribute('data-theme') === 'light';
+    });
     
     await page.screenshot({ 
       path: `tests/screenshots/${testInfo.project.name}/14-light-theme.png`,

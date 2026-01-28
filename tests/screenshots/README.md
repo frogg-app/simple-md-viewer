@@ -27,9 +27,9 @@ These screenshots represent the complete user flow through the application and s
 ## Devices Tested
 
 - **Desktop**: 1280×720 (Chromium)
-- **Mobile - iPhone**: iPhone 13 (390×844)
-- **Mobile - Android**: Pixel 5 (393×851)
-- **Tablet**: iPad (810×1080)
+- **Mobile - iPhone**: iPhone-like device (390×844)
+- **Mobile - Android**: Pixel 5 (393×727)
+- **Tablet**: iPad-like device (810×1080)
 
 ## Usage
 
