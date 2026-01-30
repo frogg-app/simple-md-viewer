@@ -1,358 +1,199 @@
-/* Editor Styles - Modern IDE-like appearance */
+/* Editor Styles - Minimal, clean design */
 
-/* Mode tabs */
-.editor-tabs {
+/* Floating action buttons */
+.floating-actions {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  flex-shrink: 0;
+  gap: 8px;
 }
 
-.editor-tab {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
+.floating-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.editor-tab:hover {
-  color: var(--text-primary);
-  background: var(--bg-primary);
-}
-
-.editor-tab.active {
-  color: var(--link-color);
-  border-bottom-color: var(--link-color);
-  background: var(--bg-primary);
-}
-
-.editor-tab .tab-icon {
-  font-size: 1rem;
-}
-
-.editor-tab-spacer {
-  flex: 1;
-}
-
-.split-toggle {
-  padding: 0.5rem 1rem;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.75rem;
-  margin: 0.5rem 1rem 0.5rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  transition: all 0.2s;
-}
-
-.split-toggle:hover {
-  color: var(--text-primary);
-  border-color: var(--text-secondary);
-}
-
-.split-toggle.active {
-  color: var(--link-color);
-  border-color: var(--link-color);
-  background: rgba(88, 166, 255, 0.1);
-}
-
-/* Formatting toolbar */
-.editor-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.5rem 1rem;
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
-}
-
-.toolbar-group {
-  display: flex;
-  gap: 0.125rem;
-  padding-right: 0.75rem;
-  margin-right: 0.5rem;
-  border-right: 1px solid var(--border-color);
-}
-
-.toolbar-group:last-child {
-  border-right: none;
-  margin-right: 0;
-  padding-right: 0;
-}
-
-.toolbar-btn {
+  color: var(--text-secondary);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.15s;
-  position: relative;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.toolbar-btn:hover {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  border-color: var(--border-color);
+.floating-btn:hover {
+  background: var(--link-color);
+  color: white;
+  transform: scale(1.05);
 }
 
-.toolbar-btn:active {
-  background: var(--border-color);
+.floating-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
-/* Editor container layout */
-.editor-container {
-  display: flex;
-  flex-direction: column;
+/* View pane */
+.view-pane {
   height: 100%;
-  overflow: hidden;
-}
-
-.editor-content {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Editor pane */
-.editor-pane {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  background: var(--bg-primary);
-}
-
-.editor-pane.hidden {
-  display: none;
-}
-
-/* Line numbers */
-.editor-line-numbers {
-  width: 48px;
-  padding: 1rem 0.5rem 1rem 0;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  text-align: right;
-  user-select: none;
-  overflow: hidden;
-  border-right: 1px solid var(--border-color);
-  flex-shrink: 0;
-}
-
-.editor-line-numbers .line-number {
-  display: block;
-  padding-right: 0.5rem;
-  height: 1.6em;
-}
-
-/* Editor textarea */
-.editor-textarea-wrapper {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-}
-
-.editor-textarea {
-  width: 100%;
-  height: 100%;
-  padding: 1rem;
-  border: none;
-  resize: none;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  tab-size: 2;
-  outline: none;
-}
-
-.editor-textarea::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.5;
-}
-
-.editor-textarea:focus {
-  outline: none;
-}
-
-/* Preview pane */
-.preview-pane {
-  flex: 1;
   overflow: auto;
-  background: var(--bg-primary);
-  border-left: 1px solid var(--border-color);
-}
-
-.preview-pane.hidden {
-  display: none;
-}
-
-.preview-pane .preview-content {
-  max-width: 900px;
-  margin: 0 auto;
   padding: 2rem;
 }
 
-/* Split view */
-.editor-content.split-view .editor-pane,
-.editor-content.split-view .preview-pane {
-  flex: 1;
+.view-pane article {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Edit overlay */
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 200;
   display: flex;
+  flex-direction: column;
 }
 
-.editor-content.split-view .preview-pane {
-  display: block;
+.edit-overlay.hidden {
+  display: none;
 }
 
-/* Resizer for split view */
-.split-resizer {
-  width: 4px;
-  background: var(--border-color);
-  cursor: col-resize;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-
-.split-resizer:hover {
-  background: var(--link-color);
-}
-
-/* Status bar */
-.editor-status-bar {
+/* Edit header */
+.edit-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.25rem 1rem;
+  justify-content: space-between;
+  padding: 8px 16px;
   background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
-.status-item {
+.edit-title {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.status-modified {
-  color: #f59e0b;
+.edit-title svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
 }
 
-.status-saved {
-  color: #22c55e;
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Save button */
-.save-btn {
-  padding: 0.5rem 1rem;
-  background: var(--link-color);
-  color: white;
+.edit-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
   border: none;
   border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
   cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin: 0.5rem 0.5rem 0.5rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.save-btn:hover {
+.edit-action-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.edit-action-btn.primary {
+  background: var(--link-color);
+  color: white;
+}
+
+.edit-action-btn.primary:hover {
   background: color-mix(in srgb, var(--link-color) 85%, black);
 }
 
-.save-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.edit-action-btn.active {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--link-color);
+}
+
+.edit-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Edit content area */
+.edit-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.edit-editor {
+  flex: 1;
+  overflow: hidden;
+}
+
+.edit-editor .cm-editor {
+  height: 100%;
+}
+
+/* Split preview */
+.edit-preview {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 2rem;
+  border-left: 1px solid var(--border-color);
+}
+
+.edit-preview.hidden {
+  display: none;
+}
+
+.edit-preview article {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-  .editor-toolbar {
-    padding: 0.375rem 0.5rem;
+  .floating-actions {
+    bottom: 16px;
+    right: 16px;
   }
   
-  .toolbar-btn {
-    width: 28px;
-    height: 28px;
-    font-size: 0.75rem;
+  .floating-btn {
+    width: 48px;
+    height: 48px;
   }
   
-  .editor-line-numbers {
-    width: 36px;
-    font-size: 0.75rem;
+  .edit-header {
+    padding: 8px 12px;
   }
   
-  .editor-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  
-  .editor-tab {
-    padding: 0.5rem 1rem;
-    font-size: 0.8125rem;
-  }
-  
-  .split-toggle {
+  .edit-action-btn span {
     display: none;
   }
   
-  /* On mobile, force single view mode */
-  .editor-content.split-view .editor-pane,
-  .editor-content.split-view .preview-pane {
-    display: none;
-  }
-  
-  .editor-content.split-view .editor-pane.active,
-  .editor-content.split-view .preview-pane.active {
-    display: flex;
+  .edit-preview {
+    display: none !important;
   }
 }
 
 /* Print styles */
 @media print {
-  .editor-tabs,
-  .editor-toolbar,
-  .editor-line-numbers,
-  .editor-status-bar,
-  .editor-pane,
-  .split-resizer {
+  .floating-actions,
+  .edit-overlay {
     display: none !important;
-  }
-  
-  .preview-pane {
-    display: block !important;
-    border: none !important;
-    overflow: visible !important;
   }
 }

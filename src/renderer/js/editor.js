@@ -1,21 +1,61 @@
 /**
  * Markdown Editor Module
- * Provides IDE-like editing experience with line numbers, syntax highlighting,
- * and formatting tools
+ * Uses CodeMirror 6 for syntax highlighting, undo/redo, and a modern editing experience
  */
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
+import { markdown } from '@codemirror/lang-markdown';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+
+// Custom dark theme for CodeMirror that matches our app
+const darkTheme = EditorView.theme({
+  '&': {
+    backgroundColor: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+    height: '100%',
+    fontSize: '14px',
+  },
+  '.cm-content': {
+    fontFamily: "'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace",
+    padding: '1rem 0',
+    caretColor: 'var(--link-color)',
+  },
+  '.cm-cursor': {
+    borderLeftColor: 'var(--link-color)',
+  },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
+    backgroundColor: 'rgba(88, 166, 255, 0.2)',
+  },
+  '.cm-gutters': {
+    backgroundColor: 'var(--bg-secondary)',
+    color: 'var(--text-secondary)',
+    border: 'none',
+    borderRight: '1px solid var(--border-color)',
+  },
+  '.cm-lineNumbers .cm-gutterElement': {
+    padding: '0 8px 0 16px',
+    minWidth: '40px',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'rgba(88, 166, 255, 0.05)',
+  },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'rgba(88, 166, 255, 0.1)',
+  },
+  '.cm-scroller': {
+    overflow: 'auto',
+  },
+}, { dark: true });
+
 export class MarkdownEditor {
   constructor() {
     this.content = '';
-    this.isModified = false;
+    this.originalContent = '';
     this.currentFilePath = null;
     this.onContentChange = null;
-    this.lineCount = 0;
-    this.listenersAttached = false;
-    
-    // Bound event handlers for cleanup
-    this.handleInput = null;
-    this.handleScroll = null;
-    this.handleKeydown = null;
+    this.editorView = null;
   }
 
   /**
@@ -25,95 +65,54 @@ export class MarkdownEditor {
    */
   init(content, filePath) {
     this.content = content;
+    this.originalContent = content;
     this.currentFilePath = filePath;
-    this.isModified = false;
     
-    const textarea = document.getElementById('editor-textarea');
-    const lineNumbers = document.getElementById('editor-line-numbers');
+    const container = document.getElementById('editor-container');
+    if (!container) return;
     
-    if (textarea) {
-      textarea.value = content;
-      this.updateLineNumbers();
-      this.setupEventListeners();
+    // Clear any existing editor
+    if (this.editorView) {
+      this.editorView.destroy();
     }
-  }
-
-  /**
-   * Setup event listeners for the editor
-   */
-  setupEventListeners() {
-    const textarea = document.getElementById('editor-textarea');
+    container.innerHTML = '';
     
-    if (!textarea) return;
-    
-    // Remove existing listeners if they were previously attached
-    if (this.listenersAttached) {
-      if (this.handleInput) textarea.removeEventListener('input', this.handleInput);
-      if (this.handleScroll) textarea.removeEventListener('scroll', this.handleScroll);
-      if (this.handleKeydown) textarea.removeEventListener('keydown', this.handleKeydown);
-    }
-    
-    // Create bound handlers
-    this.handleInput = () => {
-      this.content = textarea.value;
-      this.isModified = true;
-      this.updateLineNumbers();
-      
-      if (this.onContentChange) {
-        this.onContentChange(this.content);
-      }
-    };
-    
-    this.handleScroll = () => {
-      const lineNumbers = document.getElementById('editor-line-numbers');
-      if (lineNumbers) {
-        lineNumbers.scrollTop = textarea.scrollTop;
-      }
-    };
-    
-    this.handleKeydown = (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        
-        // Insert tab at cursor
-        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-        
-        this.content = textarea.value;
-        this.isModified = true;
-        this.updateLineNumbers();
-        
+    // Create CodeMirror editor
+    const updateListener = EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        this.content = update.state.doc.toString();
         if (this.onContentChange) {
           this.onContentChange(this.content);
         }
       }
-    };
+    });
     
-    // Attach listeners
-    textarea.addEventListener('input', this.handleInput);
-    textarea.addEventListener('scroll', this.handleScroll);
-    textarea.addEventListener('keydown', this.handleKeydown);
+    const state = EditorState.create({
+      doc: content,
+      extensions: [
+        lineNumbers(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        history(),
+        highlightSelectionMatches(),
+        markdown(),
+        syntaxHighlighting(defaultHighlightStyle),
+        keymap.of([
+          ...defaultKeymap,
+          ...historyKeymap,
+          ...searchKeymap,
+          indentWithTab,
+        ]),
+        darkTheme,
+        updateListener,
+        EditorView.lineWrapping,
+      ],
+    });
     
-    this.listenersAttached = true;
-  }
-
-  /**
-   * Update line numbers display
-   */
-  updateLineNumbers() {
-    const textarea = document.getElementById('editor-textarea');
-    const lineNumbers = document.getElementById('editor-line-numbers');
-    
-    if (!textarea || !lineNumbers) return;
-    
-    const lines = textarea.value.split('\n');
-    this.lineCount = lines.length;
-    
-    lineNumbers.innerHTML = lines
-      .map((_, i) => `<span class="line-number">${i + 1}</span>`)
-      .join('\n');
+    this.editorView = new EditorView({
+      state,
+      parent: container,
+    });
   }
 
   /**
@@ -121,8 +120,10 @@ export class MarkdownEditor {
    * @returns {string} Current editor content
    */
   getContent() {
-    const textarea = document.getElementById('editor-textarea');
-    return textarea ? textarea.value : this.content;
+    if (this.editorView) {
+      return this.editorView.state.doc.toString();
+    }
+    return this.content;
   }
 
   /**
@@ -131,170 +132,15 @@ export class MarkdownEditor {
    */
   setContent(content) {
     this.content = content;
-    const textarea = document.getElementById('editor-textarea');
-    if (textarea) {
-      textarea.value = content;
-      this.updateLineNumbers();
+    if (this.editorView) {
+      this.editorView.dispatch({
+        changes: {
+          from: 0,
+          to: this.editorView.state.doc.length,
+          insert: content,
+        },
+      });
     }
-  }
-
-  /**
-   * Insert text at cursor position
-   * @param {string} before - Text to insert before selection
-   * @param {string} after - Text to insert after selection
-   * @param {string} placeholder - Default text if no selection
-   */
-  insertAtCursor(before, after = '', placeholder = '') {
-    const textarea = document.getElementById('editor-textarea');
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    const textToInsert = selectedText || placeholder;
-    
-    const newText = before + textToInsert + after;
-    
-    textarea.value = 
-      textarea.value.substring(0, start) + 
-      newText + 
-      textarea.value.substring(end);
-    
-    // Position cursor appropriately
-    if (selectedText) {
-      textarea.selectionStart = start + before.length;
-      textarea.selectionEnd = start + before.length + textToInsert.length;
-    } else {
-      textarea.selectionStart = start + before.length;
-      textarea.selectionEnd = start + before.length + placeholder.length;
-    }
-    
-    textarea.focus();
-    
-    this.content = textarea.value;
-    this.isModified = true;
-    this.updateLineNumbers();
-    
-    if (this.onContentChange) {
-      this.onContentChange(this.content);
-    }
-  }
-
-  /**
-   * Insert text at the beginning of the current line
-   * @param {string} prefix - Text to insert at line start
-   */
-  insertAtLineStart(prefix) {
-    const textarea = document.getElementById('editor-textarea');
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const text = textarea.value;
-    
-    // Find the start of the current line
-    let lineStart = start;
-    while (lineStart > 0 && text[lineStart - 1] !== '\n') {
-      lineStart--;
-    }
-    
-    textarea.value = text.substring(0, lineStart) + prefix + text.substring(lineStart);
-    
-    // Move cursor after the inserted prefix
-    textarea.selectionStart = textarea.selectionEnd = start + prefix.length;
-    textarea.focus();
-    
-    this.content = textarea.value;
-    this.isModified = true;
-    this.updateLineNumbers();
-    
-    if (this.onContentChange) {
-      this.onContentChange(this.content);
-    }
-  }
-
-  // Formatting helper methods
-  formatBold() {
-    this.insertAtCursor('**', '**', 'bold text');
-  }
-
-  formatItalic() {
-    this.insertAtCursor('*', '*', 'italic text');
-  }
-
-  formatStrikethrough() {
-    this.insertAtCursor('~~', '~~', 'strikethrough');
-  }
-
-  formatCode() {
-    this.insertAtCursor('`', '`', 'code');
-  }
-
-  formatCodeBlock() {
-    this.insertAtCursor('```\n', '\n```', 'code block');
-  }
-
-  formatLink() {
-    this.insertAtCursor('[', '](url)', 'link text');
-  }
-
-  formatImage() {
-    this.insertAtCursor('![', '](url)', 'alt text');
-  }
-
-  formatHeading(level) {
-    const prefix = '#'.repeat(level) + ' ';
-    this.insertAtLineStart(prefix);
-  }
-
-  formatBulletList() {
-    this.insertAtLineStart('- ');
-  }
-
-  formatNumberedList() {
-    this.insertAtLineStart('1. ');
-  }
-
-  formatTaskList() {
-    this.insertAtLineStart('- [ ] ');
-  }
-
-  formatBlockquote() {
-    this.insertAtLineStart('> ');
-  }
-
-  formatHorizontalRule() {
-    const textarea = document.getElementById('editor-textarea');
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const text = textarea.value;
-    
-    // Find the end of current line
-    let lineEnd = start;
-    while (lineEnd < text.length && text[lineEnd] !== '\n') {
-      lineEnd++;
-    }
-    
-    textarea.value = text.substring(0, lineEnd) + '\n\n---\n\n' + text.substring(lineEnd);
-    textarea.selectionStart = textarea.selectionEnd = lineEnd + 5;
-    textarea.focus();
-    
-    this.content = textarea.value;
-    this.isModified = true;
-    this.updateLineNumbers();
-    
-    if (this.onContentChange) {
-      this.onContentChange(this.content);
-    }
-  }
-
-  formatTable() {
-    const tableTemplate = `| Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
-| Cell 1   | Cell 2   | Cell 3   |
-| Cell 4   | Cell 5   | Cell 6   |`;
-    
-    this.insertAtCursor('\n' + tableTemplate + '\n', '', '');
   }
 
   /**
@@ -302,13 +148,32 @@ export class MarkdownEditor {
    * @returns {boolean}
    */
   hasUnsavedChanges() {
-    return this.isModified;
+    return this.content !== this.originalContent;
   }
 
   /**
    * Mark content as saved
    */
   markAsSaved() {
-    this.isModified = false;
+    this.originalContent = this.content;
+  }
+
+  /**
+   * Focus the editor
+   */
+  focus() {
+    if (this.editorView) {
+      this.editorView.focus();
+    }
+  }
+
+  /**
+   * Destroy the editor instance
+   */
+  destroy() {
+    if (this.editorView) {
+      this.editorView.destroy();
+      this.editorView = null;
+    }
   }
 }

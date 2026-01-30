@@ -191,28 +191,21 @@ class App {
         }
       }
 
-      // Ctrl/Cmd + S: Save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      // Ctrl/Cmd + E: Open editor
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
         e.preventDefault();
-        if (this.currentMode === 'edit' || this.currentMode === 'split') {
-          this.saveFile();
+        if (this.currentFilePath && !this.isRemoteFile) {
+          if (this.currentMode === 'view') {
+            this.openEditor();
+          }
         }
       }
 
-      // Editor formatting shortcuts (only in edit mode)
-      if ((this.currentMode === 'edit' || this.currentMode === 'split') && (e.ctrlKey || e.metaKey)) {
-        const textarea = document.getElementById('editor-textarea');
-        if (document.activeElement === textarea) {
-          if (e.key === 'b') {
-            e.preventDefault();
-            this.editor.formatBold();
-          } else if (e.key === 'i') {
-            e.preventDefault();
-            this.editor.formatItalic();
-          } else if (e.key === 'k') {
-            e.preventDefault();
-            this.editor.formatLink();
-          }
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (this.currentMode === 'edit') {
+          this.saveFile();
         }
       }
 
@@ -233,9 +226,13 @@ class App {
         this.resetZoom();
       }
 
-      // Escape closes dialogs
+      // Escape closes dialogs or editor
       if (e.key === 'Escape') {
-        this.closeAllDialogs();
+        if (this.currentMode === 'edit') {
+          this.closeEditor();
+        } else {
+          this.closeAllDialogs();
+        }
       }
     });
   }
@@ -301,8 +298,15 @@ class App {
     // Render markdown
     this.renderContent(data.content);
 
-    // Initialize editor with content
-    this.editor.init(data.content, data.path);
+    // Show/hide edit button based on whether it's a remote file
+    const floatingActions = document.getElementById('floating-actions');
+    if (floatingActions) {
+      if (data.isRemote) {
+        floatingActions.classList.add('hidden');
+      } else {
+        floatingActions.classList.remove('hidden');
+      }
+    }
 
     // Update title in web mode
     if (!this.isElectron()) {
@@ -909,71 +913,96 @@ class App {
    * Setup editor tabs, toolbar, and event handlers
    */
   setupEditor() {
-    // Setup mode tabs
-    const viewTab = document.getElementById('tab-view');
-    const editTab = document.getElementById('tab-edit');
-    const splitToggle = document.getElementById('split-toggle');
-    const saveBtn = document.getElementById('save-btn');
+    // Setup edit button
+    const btnEdit = document.getElementById('btn-edit');
+    const btnSplit = document.getElementById('btn-split');
+    const btnSave = document.getElementById('btn-save');
+    const btnCloseEdit = document.getElementById('btn-close-edit');
 
-    if (viewTab) {
-      viewTab.addEventListener('click', () => this.setEditorMode('view'));
+    if (btnEdit) {
+      btnEdit.addEventListener('click', () => this.openEditor());
     }
 
-    if (editTab) {
-      editTab.addEventListener('click', () => this.setEditorMode('edit'));
+    if (btnSplit) {
+      btnSplit.addEventListener('click', () => this.toggleSplitView());
     }
 
-    if (splitToggle) {
-      splitToggle.addEventListener('click', () => this.toggleSplitView());
+    if (btnSave) {
+      btnSave.addEventListener('click', () => this.saveFile());
     }
 
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveFile());
+    if (btnCloseEdit) {
+      btnCloseEdit.addEventListener('click', () => this.closeEditor());
     }
-
-    // Setup toolbar buttons
-    this.setupToolbarButtons();
 
     // Setup live preview
     this.editor.onContentChange = (content) => {
       this.currentContent = content;
-      this.updateEditorStatus();
       this.debouncedLivePreview();
     };
-
-    // Setup split resizer
-    this.setupSplitResizer();
   }
 
   /**
-   * Setup formatting toolbar buttons
+   * Open the editor overlay
    */
-  setupToolbarButtons() {
-    const buttons = {
-      'fmt-bold': () => this.editor.formatBold(),
-      'fmt-italic': () => this.editor.formatItalic(),
-      'fmt-strike': () => this.editor.formatStrikethrough(),
-      'fmt-h1': () => this.editor.formatHeading(1),
-      'fmt-h2': () => this.editor.formatHeading(2),
-      'fmt-h3': () => this.editor.formatHeading(3),
-      'fmt-code': () => this.editor.formatCode(),
-      'fmt-codeblock': () => this.editor.formatCodeBlock(),
-      'fmt-link': () => this.editor.formatLink(),
-      'fmt-image': () => this.editor.formatImage(),
-      'fmt-bullet': () => this.editor.formatBulletList(),
-      'fmt-number': () => this.editor.formatNumberedList(),
-      'fmt-task': () => this.editor.formatTaskList(),
-      'fmt-quote': () => this.editor.formatBlockquote(),
-      'fmt-hr': () => this.editor.formatHorizontalRule(),
-      'fmt-table': () => this.editor.formatTable()
-    };
+  openEditor() {
+    if (!this.currentFilePath) return;
+    
+    const editOverlay = document.getElementById('edit-overlay');
+    const floatingActions = document.getElementById('floating-actions');
+    
+    if (editOverlay) {
+      editOverlay.classList.remove('hidden');
+      this.currentMode = 'edit';
+      
+      // Initialize CodeMirror editor
+      this.editor.init(this.currentContent, this.currentFilePath);
+      this.editor.focus();
+    }
+    
+    if (floatingActions) {
+      floatingActions.classList.add('hidden');
+    }
+  }
 
-    Object.entries(buttons).forEach(([id, handler]) => {
-      const btn = document.getElementById(id);
-      if (btn) {
-        btn.addEventListener('click', handler);
+  /**
+   * Close the editor overlay
+   */
+  closeEditor() {
+    const editOverlay = document.getElementById('edit-overlay');
+    const floatingActions = document.getElementById('floating-actions');
+    const editPreview = document.getElementById('edit-preview');
+    const btnSplit = document.getElementById('btn-split');
+    
+    // Check for unsaved changes
+    if (this.editor.hasUnsavedChanges()) {
+      if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
+        return;
       }
-    });
+    }
+    
+    // Refresh the main view with current content
+    this.renderContent(this.currentContent);
+    
+    if (editOverlay) {
+      editOverlay.classList.add('hidden');
+      this.currentMode = 'view';
+    }
+    
+    if (floatingActions) {
+      floatingActions.classList.remove('hidden');
+    }
+    
+    // Reset split view
+    if (editPreview) {
+      editPreview.classList.add('hidden');
+    }
+    if (btnSplit) {
+      btnSplit.classList.remove('active');
+    }
+    
+    // Destroy editor to clean up
+    this.editor.destroy();
   }
 
   /**
@@ -981,63 +1010,11 @@ class App {
    */
   setEditorMode(mode) {
     this.currentMode = mode;
-
-    const viewTab = document.getElementById('tab-view');
-    const editTab = document.getElementById('tab-edit');
-    const splitToggle = document.getElementById('split-toggle');
-    const editorToolbar = document.getElementById('editor-toolbar');
-    const editorPane = document.getElementById('editor-pane');
-    const previewPane = document.getElementById('preview-pane');
-    const editorContent = document.getElementById('editor-content');
-    const statusBar = document.getElementById('editor-status-bar');
-    const saveBtn = document.getElementById('save-btn');
-    const splitResizer = document.getElementById('split-resizer');
-
-    // Reset classes
-    viewTab?.classList.remove('active');
-    editTab?.classList.remove('active');
-    splitToggle?.classList.remove('active');
-    editorContent?.classList.remove('split-view');
-
-    // Update aria-selected for accessibility
-    viewTab?.setAttribute('aria-selected', 'false');
-    editTab?.setAttribute('aria-selected', 'false');
-
-    if (mode === 'view') {
-      viewTab?.classList.add('active');
-      viewTab?.setAttribute('aria-selected', 'true');
-      editorToolbar?.classList.add('hidden');
-      editorPane?.classList.add('hidden');
-      previewPane?.classList.remove('hidden');
-      statusBar?.classList.add('hidden');
-      saveBtn?.classList.add('hidden');
-      splitResizer?.classList.add('hidden');
-      // Refresh preview with current editor content
-      this.renderContent(this.editor.getContent());
-    } else if (mode === 'edit') {
-      editTab?.classList.add('active');
-      editTab?.setAttribute('aria-selected', 'true');
-      editorToolbar?.classList.remove('hidden');
-      editorPane?.classList.remove('hidden');
-      previewPane?.classList.add('hidden');
-      statusBar?.classList.remove('hidden');
-      saveBtn?.classList.remove('hidden');
-      splitResizer?.classList.add('hidden');
-      this.updateEditorStatus();
-    } else if (mode === 'split') {
-      editTab?.classList.add('active');
-      editTab?.setAttribute('aria-selected', 'true');
-      splitToggle?.classList.add('active');
-      editorToolbar?.classList.remove('hidden');
-      editorPane?.classList.remove('hidden');
-      previewPane?.classList.remove('hidden');
-      editorContent?.classList.add('split-view');
-      statusBar?.classList.remove('hidden');
-      saveBtn?.classList.remove('hidden');
-      splitResizer?.classList.remove('hidden');
-      this.updateEditorStatus();
-      // Refresh preview
-      this.renderContent(this.editor.getContent());
+    
+    // Update floating actions visibility
+    const floatingActions = document.getElementById('floating-actions');
+    if (floatingActions && this.currentFilePath && !this.isRemoteFile) {
+      floatingActions.classList.remove('hidden');
     }
   }
 
@@ -1045,11 +1022,37 @@ class App {
    * Toggle split view
    */
   toggleSplitView() {
-    if (this.currentMode === 'split') {
-      this.setEditorMode('edit');
+    const editPreview = document.getElementById('edit-preview');
+    const previewContent = document.getElementById('preview-content');
+    const btnSplit = document.getElementById('btn-split');
+    
+    if (!editPreview) return;
+    
+    const isSplit = !editPreview.classList.contains('hidden');
+    
+    if (isSplit) {
+      editPreview.classList.add('hidden');
+      btnSplit?.classList.remove('active');
     } else {
-      this.setEditorMode('split');
+      editPreview.classList.remove('hidden');
+      btnSplit?.classList.add('active');
+      // Render preview
+      this.renderPreviewContent(this.currentContent);
     }
+  }
+
+  /**
+   * Render content to the preview pane in split view
+   */
+  async renderPreviewContent(content) {
+    const previewContent = document.getElementById('preview-content');
+    if (!previewContent) return;
+    
+    const html = await this.markdownRenderer.render(content, this.currentFilePath);
+    previewContent.innerHTML = html;
+    
+    // Process mermaid diagrams
+    await this.mermaidHandler.renderDiagrams(previewContent);
   }
 
   /**
@@ -1061,81 +1064,11 @@ class App {
     }
     
     this.livePreviewDebounceTimer = setTimeout(() => {
-      if (this.currentMode === 'split') {
-        this.renderContent(this.currentContent);
+      const editPreview = document.getElementById('edit-preview');
+      if (editPreview && !editPreview.classList.contains('hidden')) {
+        this.renderPreviewContent(this.currentContent);
       }
     }, 150);
-  }
-
-  /**
-   * Update editor status bar
-   */
-  updateEditorStatus() {
-    const content = this.editor.getContent();
-    const lines = content.split('\n').length;
-    const chars = content.length;
-    const isModified = this.editor.hasUnsavedChanges();
-
-    const statusLines = document.getElementById('status-lines');
-    const statusChars = document.getElementById('status-chars');
-    const statusSaved = document.getElementById('status-saved');
-
-    if (statusLines) statusLines.textContent = `Lines: ${lines}`;
-    if (statusChars) statusChars.textContent = `Characters: ${chars}`;
-    if (statusSaved) {
-      if (isModified) {
-        statusSaved.textContent = '● Modified';
-        statusSaved.className = 'status-item status-modified';
-      } else {
-        statusSaved.textContent = '✓ Saved';
-        statusSaved.className = 'status-item status-saved';
-      }
-    }
-  }
-
-  /**
-   * Setup split resizer drag functionality
-   */
-  setupSplitResizer() {
-    const resizer = document.getElementById('split-resizer');
-    const editorPane = document.getElementById('editor-pane');
-    const previewPane = document.getElementById('preview-pane');
-    const editorContent = document.getElementById('editor-content');
-
-    if (!resizer || !editorPane || !previewPane || !editorContent) return;
-
-    let isResizing = false;
-
-    resizer.addEventListener('mousedown', (e) => {
-      isResizing = true;
-      document.body.style.cursor = 'col-resize';
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-
-      const containerRect = editorContent.getBoundingClientRect();
-      const newEditorWidth = e.clientX - containerRect.left;
-      const containerWidth = containerRect.width;
-      
-      // Limit resize to reasonable bounds (20% - 80%)
-      const minWidth = containerWidth * 0.2;
-      const maxWidth = containerWidth * 0.8;
-      
-      if (newEditorWidth >= minWidth && newEditorWidth <= maxWidth) {
-        editorPane.style.flex = 'none';
-        editorPane.style.width = `${newEditorWidth}px`;
-        previewPane.style.flex = '1';
-      }
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (isResizing) {
-        isResizing = false;
-        document.body.style.cursor = '';
-      }
-    });
   }
 
   /**
@@ -1169,8 +1102,7 @@ class App {
 
       this.currentContent = content;
       this.editor.markAsSaved();
-      this.updateEditorStatus();
-      this.toast.show('File saved', 'success');
+      this.toast.show('Saved', 'success');
     } catch (err) {
       console.error('Save error:', err);
       this.toast.show(`Save failed: ${err.message}`, 'error');
