@@ -139,12 +139,12 @@
   overflow: hidden;
 }
 
-.edit-editor {
+.editor-container {
   flex: 1;
   overflow: hidden;
 }
 
-.edit-editor .cm-editor {
+.editor-container .cm-editor {
   height: 100%;
 }
 

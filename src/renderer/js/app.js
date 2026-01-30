@@ -26,7 +26,7 @@ class App {
     this.activeMenu = null;
     
     // Editor state
-    this.currentMode = 'view'; // 'view', 'edit', 'split'
+    this.currentMode = 'view'; // 'view' or 'edit' (split preview is a toggle within edit mode)
     this.currentContent = '';
     this.livePreviewDebounceTimer = null;
 
@@ -980,6 +980,9 @@ class App {
         return;
       }
     }
+    
+    // Update currentContent with editor content before closing
+    this.currentContent = this.editor.getContent();
     
     // Refresh the main view with current content
     this.renderContent(this.currentContent);
