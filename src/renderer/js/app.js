@@ -6,6 +6,7 @@ import { ToastNotifications } from './toast-notifications.js';
 import { RemoteDialog } from './remote-dialog.js';
 import { CredentialsDialog } from './credentials-dialog.js';
 import { SettingsManager } from './settings-manager.js';
+import { MarkdownEditor } from './editor.js';
 
 class App {
   constructor() {
@@ -17,11 +18,17 @@ class App {
     this.remoteDialog = new RemoteDialog();
     this.credentialsDialog = new CredentialsDialog();
     this.settingsManager = new SettingsManager();
+    this.editor = new MarkdownEditor();
 
     this.currentFilePath = null;
     this.isRemoteFile = false;
     this.pageZoom = 1;
     this.activeMenu = null;
+    
+    // Editor state
+    this.currentMode = 'view'; // 'view', 'edit', 'split'
+    this.currentContent = '';
+    this.livePreviewDebounceTimer = null;
 
     this.init();
   }
@@ -34,6 +41,7 @@ class App {
     this.setupDialogs();
     this.setupMenuBar();
     this.setupSettingsDialog();
+    this.setupEditor();
     this.updateShortcutHint();
     this.updateShortcutsDialog();
     this.loadSectionVisibility();
@@ -183,6 +191,31 @@ class App {
         }
       }
 
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (this.currentMode === 'edit' || this.currentMode === 'split') {
+          this.saveFile();
+        }
+      }
+
+      // Editor formatting shortcuts (only in edit mode)
+      if ((this.currentMode === 'edit' || this.currentMode === 'split') && (e.ctrlKey || e.metaKey)) {
+        const textarea = document.getElementById('editor-textarea');
+        if (document.activeElement === textarea) {
+          if (e.key === 'b') {
+            e.preventDefault();
+            this.editor.formatBold();
+          } else if (e.key === 'i') {
+            e.preventDefault();
+            this.editor.formatItalic();
+          } else if (e.key === 'k') {
+            e.preventDefault();
+            this.editor.formatLink();
+          }
+        }
+      }
+
       // Ctrl/Cmd + F: Find (browser native)
       // Let it pass through
 
@@ -256,13 +289,20 @@ class App {
   handleFileOpened(data) {
     this.currentFilePath = data.path;
     this.isRemoteFile = data.isRemote;
+    this.currentContent = data.content;
 
     // Hide empty state, show content
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
 
+    // Set to view mode by default
+    this.setEditorMode('view');
+
     // Render markdown
     this.renderContent(data.content);
+
+    // Initialize editor with content
+    this.editor.init(data.content, data.path);
 
     // Update title in web mode
     if (!this.isElectron()) {
@@ -863,6 +903,268 @@ class App {
         dialog.classList.remove('centered');
       }
     });
+  }
+
+  /**
+   * Setup editor tabs, toolbar, and event handlers
+   */
+  setupEditor() {
+    // Setup mode tabs
+    const viewTab = document.getElementById('tab-view');
+    const editTab = document.getElementById('tab-edit');
+    const splitToggle = document.getElementById('split-toggle');
+    const saveBtn = document.getElementById('save-btn');
+
+    if (viewTab) {
+      viewTab.addEventListener('click', () => this.setEditorMode('view'));
+    }
+
+    if (editTab) {
+      editTab.addEventListener('click', () => this.setEditorMode('edit'));
+    }
+
+    if (splitToggle) {
+      splitToggle.addEventListener('click', () => this.toggleSplitView());
+    }
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => this.saveFile());
+    }
+
+    // Setup toolbar buttons
+    this.setupToolbarButtons();
+
+    // Setup live preview
+    this.editor.onContentChange = (content) => {
+      this.currentContent = content;
+      this.updateEditorStatus();
+      this.debouncedLivePreview();
+    };
+
+    // Setup split resizer
+    this.setupSplitResizer();
+  }
+
+  /**
+   * Setup formatting toolbar buttons
+   */
+  setupToolbarButtons() {
+    const buttons = {
+      'fmt-bold': () => this.editor.formatBold(),
+      'fmt-italic': () => this.editor.formatItalic(),
+      'fmt-strike': () => this.editor.formatStrikethrough(),
+      'fmt-h1': () => this.editor.formatHeading(1),
+      'fmt-h2': () => this.editor.formatHeading(2),
+      'fmt-h3': () => this.editor.formatHeading(3),
+      'fmt-code': () => this.editor.formatCode(),
+      'fmt-codeblock': () => this.editor.formatCodeBlock(),
+      'fmt-link': () => this.editor.formatLink(),
+      'fmt-image': () => this.editor.formatImage(),
+      'fmt-bullet': () => this.editor.formatBulletList(),
+      'fmt-number': () => this.editor.formatNumberedList(),
+      'fmt-task': () => this.editor.formatTaskList(),
+      'fmt-quote': () => this.editor.formatBlockquote(),
+      'fmt-hr': () => this.editor.formatHorizontalRule(),
+      'fmt-table': () => this.editor.formatTable()
+    };
+
+    Object.entries(buttons).forEach(([id, handler]) => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener('click', handler);
+      }
+    });
+  }
+
+  /**
+   * Set editor mode (view, edit, or split)
+   */
+  setEditorMode(mode) {
+    this.currentMode = mode;
+
+    const viewTab = document.getElementById('tab-view');
+    const editTab = document.getElementById('tab-edit');
+    const splitToggle = document.getElementById('split-toggle');
+    const editorToolbar = document.getElementById('editor-toolbar');
+    const editorPane = document.getElementById('editor-pane');
+    const previewPane = document.getElementById('preview-pane');
+    const editorContent = document.getElementById('editor-content');
+    const statusBar = document.getElementById('editor-status-bar');
+    const saveBtn = document.getElementById('save-btn');
+    const splitResizer = document.getElementById('split-resizer');
+
+    // Reset classes
+    viewTab?.classList.remove('active');
+    editTab?.classList.remove('active');
+    splitToggle?.classList.remove('active');
+    editorContent?.classList.remove('split-view');
+
+    if (mode === 'view') {
+      viewTab?.classList.add('active');
+      editorToolbar?.classList.add('hidden');
+      editorPane?.classList.add('hidden');
+      previewPane?.classList.remove('hidden');
+      statusBar?.classList.add('hidden');
+      saveBtn?.classList.add('hidden');
+      splitResizer?.classList.add('hidden');
+    } else if (mode === 'edit') {
+      editTab?.classList.add('active');
+      editorToolbar?.classList.remove('hidden');
+      editorPane?.classList.remove('hidden');
+      previewPane?.classList.add('hidden');
+      statusBar?.classList.remove('hidden');
+      saveBtn?.classList.remove('hidden');
+      splitResizer?.classList.add('hidden');
+      this.updateEditorStatus();
+    } else if (mode === 'split') {
+      editTab?.classList.add('active');
+      splitToggle?.classList.add('active');
+      editorToolbar?.classList.remove('hidden');
+      editorPane?.classList.remove('hidden');
+      previewPane?.classList.remove('hidden');
+      editorContent?.classList.add('split-view');
+      statusBar?.classList.remove('hidden');
+      saveBtn?.classList.remove('hidden');
+      splitResizer?.classList.remove('hidden');
+      this.updateEditorStatus();
+      // Refresh preview
+      this.renderContent(this.currentContent);
+    }
+  }
+
+  /**
+   * Toggle split view
+   */
+  toggleSplitView() {
+    if (this.currentMode === 'split') {
+      this.setEditorMode('edit');
+    } else {
+      this.setEditorMode('split');
+    }
+  }
+
+  /**
+   * Debounced live preview update
+   */
+  debouncedLivePreview() {
+    if (this.livePreviewDebounceTimer) {
+      clearTimeout(this.livePreviewDebounceTimer);
+    }
+    
+    this.livePreviewDebounceTimer = setTimeout(() => {
+      if (this.currentMode === 'split') {
+        this.renderContent(this.currentContent);
+      }
+    }, 150);
+  }
+
+  /**
+   * Update editor status bar
+   */
+  updateEditorStatus() {
+    const content = this.editor.getContent();
+    const lines = content.split('\n').length;
+    const chars = content.length;
+    const isModified = this.editor.hasUnsavedChanges();
+
+    const statusLines = document.getElementById('status-lines');
+    const statusChars = document.getElementById('status-chars');
+    const statusSaved = document.getElementById('status-saved');
+
+    if (statusLines) statusLines.textContent = `Lines: ${lines}`;
+    if (statusChars) statusChars.textContent = `Characters: ${chars}`;
+    if (statusSaved) {
+      if (isModified) {
+        statusSaved.textContent = '● Modified';
+        statusSaved.className = 'status-item status-modified';
+      } else {
+        statusSaved.textContent = '✓ Saved';
+        statusSaved.className = 'status-item status-saved';
+      }
+    }
+  }
+
+  /**
+   * Setup split resizer drag functionality
+   */
+  setupSplitResizer() {
+    const resizer = document.getElementById('split-resizer');
+    const editorPane = document.getElementById('editor-pane');
+    const previewPane = document.getElementById('preview-pane');
+    const editorContent = document.getElementById('editor-content');
+
+    if (!resizer || !editorPane || !previewPane || !editorContent) return;
+
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+
+      const containerRect = editorContent.getBoundingClientRect();
+      const newEditorWidth = e.clientX - containerRect.left;
+      const containerWidth = containerRect.width;
+      
+      // Limit resize to reasonable bounds (20% - 80%)
+      const minWidth = containerWidth * 0.2;
+      const maxWidth = containerWidth * 0.8;
+      
+      if (newEditorWidth >= minWidth && newEditorWidth <= maxWidth) {
+        editorPane.style.flex = 'none';
+        editorPane.style.width = `${newEditorWidth}px`;
+        previewPane.style.flex = '1';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = '';
+      }
+    });
+  }
+
+  /**
+   * Save the current file
+   */
+  async saveFile() {
+    if (!this.currentFilePath || this.isRemoteFile) {
+      this.toast.show('Cannot save remote files', 'warning');
+      return;
+    }
+
+    const content = this.editor.getContent();
+
+    try {
+      // Save via API
+      const response = await fetch('/api/file', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: this.currentFilePath,
+          content: content
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save file');
+      }
+
+      this.editor.markAsSaved();
+      this.updateEditorStatus();
+      this.toast.show('File saved', 'success');
+    } catch (err) {
+      console.error('Save error:', err);
+      this.toast.show(`Save failed: ${err.message}`, 'error');
+    }
   }
 }
 

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./styles/markdown.css">
   <link rel="stylesheet" href="./styles/mermaid.css">
   <link rel="stylesheet" href="./styles/dialogs.css">
+  <link rel="stylesheet" href="./styles/editor.css">
   <link rel="stylesheet" href="./styles/mobile.css">
   <link rel="stylesheet" href="./styles/themes/dark.css">
 </head>
@@ -151,7 +152,91 @@
 
     <!-- Main content -->
     <main id="content" class="hidden">
-      <article id="markdown-content"></article>
+      <div class="editor-container">
+        <!-- Mode tabs -->
+        <div class="editor-tabs">
+          <button class="editor-tab active" id="tab-view" data-mode="view">
+            <span class="tab-icon">👁</span>
+            <span>View</span>
+          </button>
+          <button class="editor-tab" id="tab-edit" data-mode="edit">
+            <span class="tab-icon">✏️</span>
+            <span>Edit</span>
+          </button>
+          <div class="editor-tab-spacer"></div>
+          <button class="split-toggle" id="split-toggle" title="Split View">
+            <span>⫿</span>
+            <span>Split</span>
+          </button>
+          <button class="save-btn hidden" id="save-btn" title="Save (Ctrl+S)">
+            <span>💾</span>
+            <span>Save</span>
+          </button>
+        </div>
+
+        <!-- Formatting toolbar (visible in edit mode) -->
+        <div class="editor-toolbar hidden" id="editor-toolbar">
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+            <button class="toolbar-btn" id="fmt-italic" title="Italic (Ctrl+I)"><em>I</em></button>
+            <button class="toolbar-btn" id="fmt-strike" title="Strikethrough"><s>S</s></button>
+          </div>
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-h1" title="Heading 1">H1</button>
+            <button class="toolbar-btn" id="fmt-h2" title="Heading 2">H2</button>
+            <button class="toolbar-btn" id="fmt-h3" title="Heading 3">H3</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-code" title="Inline Code">&lt;&gt;</button>
+            <button class="toolbar-btn" id="fmt-codeblock" title="Code Block">{ }</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-link" title="Link">🔗</button>
+            <button class="toolbar-btn" id="fmt-image" title="Image">🖼</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-bullet" title="Bullet List">•</button>
+            <button class="toolbar-btn" id="fmt-number" title="Numbered List">1.</button>
+            <button class="toolbar-btn" id="fmt-task" title="Task List">☑</button>
+          </div>
+          <div class="toolbar-group">
+            <button class="toolbar-btn" id="fmt-quote" title="Blockquote">❝</button>
+            <button class="toolbar-btn" id="fmt-hr" title="Horizontal Rule">—</button>
+            <button class="toolbar-btn" id="fmt-table" title="Table">▦</button>
+          </div>
+        </div>
+
+        <!-- Editor content area -->
+        <div class="editor-content" id="editor-content">
+          <!-- Editor pane -->
+          <div class="editor-pane hidden" id="editor-pane">
+            <div class="editor-line-numbers" id="editor-line-numbers"></div>
+            <div class="editor-textarea-wrapper">
+              <textarea 
+                class="editor-textarea" 
+                id="editor-textarea" 
+                placeholder="Start writing markdown..."
+                spellcheck="true"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Split resizer -->
+          <div class="split-resizer hidden" id="split-resizer"></div>
+
+          <!-- Preview pane -->
+          <div class="preview-pane" id="preview-pane">
+            <article id="markdown-content" class="preview-content"></article>
+          </div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="editor-status-bar hidden" id="editor-status-bar">
+          <span class="status-item" id="status-lines">Lines: 0</span>
+          <span class="status-item" id="status-chars">Characters: 0</span>
+          <span class="status-item status-saved" id="status-saved">✓ Saved</span>
+        </div>
+      </div>
     </main>
 
     <!-- Dialogs -->
@@ -244,6 +329,7 @@
         <tbody>
           <tr id="shortcut-ctrl-o"><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Open local file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></td><td>Open remote file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save file (in edit mode)</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Reload file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td><td>Close window</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd></td><td>Zoom in</td></tr>
@@ -254,6 +340,14 @@
           <tr id="shortcut-home"><td><kbd>Esc</kbd></td><td>Close dialog</td></tr>
         </tbody>
       </table>
+      <h4 style="margin-top: 1rem; margin-bottom: 0.5rem;">Edit Mode Shortcuts</h4>
+      <table class="shortcuts-table">
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Bold</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>I</kbd></td><td>Italic</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>K</kbd></td><td>Insert link</td></tr>
+        </tbody>
+      </table>
       <div class="dialog-actions">
         <button type="button" class="btn-primary" id="shortcuts-close">Close</button>
       </div>
@@ -262,7 +356,7 @@
     <dialog id="about-dialog" class="modal">
       <h3>MD Viewer</h3>
       <p>Version 1.0.0</p>
-      <p>A minimalist markdown file viewer with support for:</p>
+      <p>A minimalist markdown file viewer and editor with support for:</p>
       <ul>
         <li>GitHub Flavored Markdown</li>
         <li>Mermaid diagrams with zoom</li>
@@ -270,6 +364,7 @@
         <li>LaTeX/KaTeX math</li>
         <li>Local and remote file viewing</li>
         <li>Live file updates</li>
+        <li>Live preview editing with split view</li>
       </ul>
       <div class="dialog-actions">
         <button type="button" class="btn-primary" id="about-close">Close</button>
