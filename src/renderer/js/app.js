@@ -999,16 +999,24 @@ class App {
     splitToggle?.classList.remove('active');
     editorContent?.classList.remove('split-view');
 
+    // Update aria-selected for accessibility
+    viewTab?.setAttribute('aria-selected', 'false');
+    editTab?.setAttribute('aria-selected', 'false');
+
     if (mode === 'view') {
       viewTab?.classList.add('active');
+      viewTab?.setAttribute('aria-selected', 'true');
       editorToolbar?.classList.add('hidden');
       editorPane?.classList.add('hidden');
       previewPane?.classList.remove('hidden');
       statusBar?.classList.add('hidden');
       saveBtn?.classList.add('hidden');
       splitResizer?.classList.add('hidden');
+      // Refresh preview with current editor content
+      this.renderContent(this.editor.getContent());
     } else if (mode === 'edit') {
       editTab?.classList.add('active');
+      editTab?.setAttribute('aria-selected', 'true');
       editorToolbar?.classList.remove('hidden');
       editorPane?.classList.remove('hidden');
       previewPane?.classList.add('hidden');
@@ -1018,6 +1026,7 @@ class App {
       this.updateEditorStatus();
     } else if (mode === 'split') {
       editTab?.classList.add('active');
+      editTab?.setAttribute('aria-selected', 'true');
       splitToggle?.classList.add('active');
       editorToolbar?.classList.remove('hidden');
       editorPane?.classList.remove('hidden');
@@ -1028,7 +1037,7 @@ class App {
       splitResizer?.classList.remove('hidden');
       this.updateEditorStatus();
       // Refresh preview
-      this.renderContent(this.currentContent);
+      this.renderContent(this.editor.getContent());
     }
   }
 
@@ -1158,6 +1167,7 @@ class App {
         throw new Error(data.error || 'Failed to save file');
       }
 
+      this.currentContent = content;
       this.editor.markAsSaved();
       this.updateEditorStatus();
       this.toast.show('File saved', 'success');

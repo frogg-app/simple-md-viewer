@@ -99,7 +99,7 @@ function routes(docsPath) {
       });
     } catch (error) {
       if (error.code === 'ENOENT') {
-        res.status(404).json({ error: 'File not found' });
+        res.status(404).json({ error: 'File path is invalid or parent directory does not exist' });
       } else if (error.code === 'EACCES') {
         res.status(403).json({ error: 'Permission denied' });
       } else {

@@ -10,6 +10,12 @@ export class MarkdownEditor {
     this.currentFilePath = null;
     this.onContentChange = null;
     this.lineCount = 0;
+    this.listenersAttached = false;
+    
+    // Bound event handlers for cleanup
+    this.handleInput = null;
+    this.handleScroll = null;
+    this.handleKeydown = null;
   }
 
   /**
@@ -40,8 +46,15 @@ export class MarkdownEditor {
     
     if (!textarea) return;
     
-    // Handle input for live preview
-    textarea.addEventListener('input', () => {
+    // Remove existing listeners if they were previously attached
+    if (this.listenersAttached) {
+      if (this.handleInput) textarea.removeEventListener('input', this.handleInput);
+      if (this.handleScroll) textarea.removeEventListener('scroll', this.handleScroll);
+      if (this.handleKeydown) textarea.removeEventListener('keydown', this.handleKeydown);
+    }
+    
+    // Create bound handlers
+    this.handleInput = () => {
       this.content = textarea.value;
       this.isModified = true;
       this.updateLineNumbers();
@@ -49,18 +62,16 @@ export class MarkdownEditor {
       if (this.onContentChange) {
         this.onContentChange(this.content);
       }
-    });
+    };
     
-    // Handle scroll sync with line numbers
-    textarea.addEventListener('scroll', () => {
+    this.handleScroll = () => {
       const lineNumbers = document.getElementById('editor-line-numbers');
       if (lineNumbers) {
         lineNumbers.scrollTop = textarea.scrollTop;
       }
-    });
+    };
     
-    // Handle tab key for indentation
-    textarea.addEventListener('keydown', (e) => {
+    this.handleKeydown = (e) => {
       if (e.key === 'Tab') {
         e.preventDefault();
         const start = textarea.selectionStart;
@@ -78,7 +89,14 @@ export class MarkdownEditor {
           this.onContentChange(this.content);
         }
       }
-    });
+    };
+    
+    // Attach listeners
+    textarea.addEventListener('input', this.handleInput);
+    textarea.addEventListener('scroll', this.handleScroll);
+    textarea.addEventListener('keydown', this.handleKeydown);
+    
+    this.listenersAttached = true;
   }
 
   /**

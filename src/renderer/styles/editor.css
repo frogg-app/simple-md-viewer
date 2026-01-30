@@ -109,6 +109,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   transition: all 0.15s;
+  position: relative;
 }
 
 .toolbar-btn:hover {
@@ -119,29 +120,6 @@
 
 .toolbar-btn:active {
   background: var(--border-color);
-}
-
-.toolbar-btn[title]::after {
-  content: attr(title);
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.25rem 0.5rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  z-index: 100;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.toolbar-btn {
-  position: relative;
 }
 
 /* Editor container layout */

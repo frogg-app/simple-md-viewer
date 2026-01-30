@@ -154,78 +154,79 @@
     <main id="content" class="hidden">
       <div class="editor-container">
         <!-- Mode tabs -->
-        <div class="editor-tabs">
-          <button class="editor-tab active" id="tab-view" data-mode="view">
-            <span class="tab-icon">👁</span>
+        <div class="editor-tabs" role="tablist" aria-label="Editor modes">
+          <button class="editor-tab active" id="tab-view" data-mode="view" role="tab" aria-selected="true" aria-controls="preview-pane">
+            <span class="tab-icon" aria-hidden="true">👁</span>
             <span>View</span>
           </button>
-          <button class="editor-tab" id="tab-edit" data-mode="edit">
-            <span class="tab-icon">✏️</span>
+          <button class="editor-tab" id="tab-edit" data-mode="edit" role="tab" aria-selected="false" aria-controls="editor-pane">
+            <span class="tab-icon" aria-hidden="true">✏️</span>
             <span>Edit</span>
           </button>
           <div class="editor-tab-spacer"></div>
-          <button class="split-toggle" id="split-toggle" title="Split View">
-            <span>⫿</span>
+          <button class="split-toggle" id="split-toggle" title="Split View" aria-label="Toggle split view">
+            <span aria-hidden="true">⫿</span>
             <span>Split</span>
           </button>
-          <button class="save-btn hidden" id="save-btn" title="Save (Ctrl+S)">
-            <span>💾</span>
+          <button class="save-btn hidden" id="save-btn" title="Save (Ctrl+S)" aria-label="Save file (Ctrl+S)">
+            <span aria-hidden="true">💾</span>
             <span>Save</span>
           </button>
         </div>
 
         <!-- Formatting toolbar (visible in edit mode) -->
-        <div class="editor-toolbar hidden" id="editor-toolbar">
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
-            <button class="toolbar-btn" id="fmt-italic" title="Italic (Ctrl+I)"><em>I</em></button>
-            <button class="toolbar-btn" id="fmt-strike" title="Strikethrough"><s>S</s></button>
+        <div class="editor-toolbar hidden" id="editor-toolbar" role="toolbar" aria-label="Formatting tools">
+          <div class="toolbar-group" role="group" aria-label="Text formatting">
+            <button class="toolbar-btn" id="fmt-bold" title="Bold (Ctrl+B)" aria-label="Bold (Ctrl+B)"><strong>B</strong></button>
+            <button class="toolbar-btn" id="fmt-italic" title="Italic (Ctrl+I)" aria-label="Italic (Ctrl+I)"><em>I</em></button>
+            <button class="toolbar-btn" id="fmt-strike" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
           </div>
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-h1" title="Heading 1">H1</button>
-            <button class="toolbar-btn" id="fmt-h2" title="Heading 2">H2</button>
-            <button class="toolbar-btn" id="fmt-h3" title="Heading 3">H3</button>
+          <div class="toolbar-group" role="group" aria-label="Headings">
+            <button class="toolbar-btn" id="fmt-h1" title="Heading 1" aria-label="Heading 1">H1</button>
+            <button class="toolbar-btn" id="fmt-h2" title="Heading 2" aria-label="Heading 2">H2</button>
+            <button class="toolbar-btn" id="fmt-h3" title="Heading 3" aria-label="Heading 3">H3</button>
           </div>
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-code" title="Inline Code">&lt;&gt;</button>
-            <button class="toolbar-btn" id="fmt-codeblock" title="Code Block">{ }</button>
+          <div class="toolbar-group" role="group" aria-label="Code">
+            <button class="toolbar-btn" id="fmt-code" title="Inline Code" aria-label="Inline code">&lt;&gt;</button>
+            <button class="toolbar-btn" id="fmt-codeblock" title="Code Block" aria-label="Code block">{ }</button>
           </div>
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-link" title="Link">🔗</button>
-            <button class="toolbar-btn" id="fmt-image" title="Image">🖼</button>
+          <div class="toolbar-group" role="group" aria-label="Links and media">
+            <button class="toolbar-btn" id="fmt-link" title="Link" aria-label="Insert link">🔗</button>
+            <button class="toolbar-btn" id="fmt-image" title="Image" aria-label="Insert image">🖼</button>
           </div>
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-bullet" title="Bullet List">•</button>
-            <button class="toolbar-btn" id="fmt-number" title="Numbered List">1.</button>
-            <button class="toolbar-btn" id="fmt-task" title="Task List">☑</button>
+          <div class="toolbar-group" role="group" aria-label="Lists">
+            <button class="toolbar-btn" id="fmt-bullet" title="Bullet List" aria-label="Bullet list">•</button>
+            <button class="toolbar-btn" id="fmt-number" title="Numbered List" aria-label="Numbered list">1.</button>
+            <button class="toolbar-btn" id="fmt-task" title="Task List" aria-label="Task list">☑</button>
           </div>
-          <div class="toolbar-group">
-            <button class="toolbar-btn" id="fmt-quote" title="Blockquote">❝</button>
-            <button class="toolbar-btn" id="fmt-hr" title="Horizontal Rule">—</button>
-            <button class="toolbar-btn" id="fmt-table" title="Table">▦</button>
+          <div class="toolbar-group" role="group" aria-label="Block elements">
+            <button class="toolbar-btn" id="fmt-quote" title="Blockquote" aria-label="Blockquote">❝</button>
+            <button class="toolbar-btn" id="fmt-hr" title="Horizontal Rule" aria-label="Horizontal rule">—</button>
+            <button class="toolbar-btn" id="fmt-table" title="Table" aria-label="Insert table">▦</button>
           </div>
         </div>
 
         <!-- Editor content area -->
         <div class="editor-content" id="editor-content">
           <!-- Editor pane -->
-          <div class="editor-pane hidden" id="editor-pane">
-            <div class="editor-line-numbers" id="editor-line-numbers"></div>
+          <div class="editor-pane hidden" id="editor-pane" role="tabpanel" aria-labelledby="tab-edit">
+            <div class="editor-line-numbers" id="editor-line-numbers" aria-hidden="true"></div>
             <div class="editor-textarea-wrapper">
               <textarea 
                 class="editor-textarea" 
                 id="editor-textarea" 
                 placeholder="Start writing markdown..."
                 spellcheck="true"
+                aria-label="Markdown editor"
               ></textarea>
             </div>
           </div>
 
           <!-- Split resizer -->
-          <div class="split-resizer hidden" id="split-resizer"></div>
+          <div class="split-resizer hidden" id="split-resizer" role="separator" aria-orientation="vertical" aria-label="Resize editor and preview panes"></div>
 
           <!-- Preview pane -->
-          <div class="preview-pane" id="preview-pane">
+          <div class="preview-pane" id="preview-pane" role="tabpanel" aria-labelledby="tab-view">
             <article id="markdown-content" class="preview-content"></article>
           </div>
         </div>
