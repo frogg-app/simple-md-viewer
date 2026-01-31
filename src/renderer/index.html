@@ -26,18 +26,6 @@
     </button>
     <span id="mobile-title" class="mobile-title">MD Viewer</span>
     <div class="mobile-header-actions">
-      <button id="mobile-theme-btn" class="mobile-action-btn" aria-label="Toggle theme">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
       </button>
     </div>
   </header>
@@ -182,12 +170,6 @@
         </li>
         <li role="separator" class="menu-separator"></li>
         <li role="menuitem">
-          <button id="menu-toggle-theme" class="menu-action">
-            <span>Toggle Theme</span>
-            <span class="menu-shortcut">Ctrl+Shift+T</span>
-          </button>
-        </li>
-        <li role="menuitem">
           <button id="menu-fullscreen" class="menu-action">
             <span>Toggle Fullscreen</span>
             <span class="menu-shortcut">F11</span>
@@ -271,7 +253,7 @@
       
       <!-- View pane (default) -->
       <div class="view-pane" id="view-pane">
-        <article id="markdown-content"></article>
+        <article id="markdown-content" class="markdown-body"></article>
       </div>
       
       <!-- Edit overlay (hidden by default) -->
@@ -285,10 +267,17 @@
             <span>Editing</span>
           </div>
           <div class="edit-actions">
-            <button class="edit-action-btn" id="btn-split" title="Split view" aria-label="Toggle split view">
+            <button class="edit-action-btn" id="btn-split" title="Preview (Ctrl+P)" aria-label="Toggle live preview">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="12" y1="3" x2="12" y2="21"></line>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+            <button class="edit-action-btn" id="btn-download" title="Download" aria-label="Download file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
             </button>
             <button class="edit-action-btn primary" id="btn-save" title="Save (Ctrl+S)" aria-label="Save file">
@@ -310,7 +299,7 @@
         <div class="edit-content">
           <div class="editor-container" id="editor-container"></div>
           <div class="edit-preview hidden" id="edit-preview">
-            <article id="preview-content"></article>
+            <article id="preview-content" class="markdown-body"></article>
           </div>
         </div>
       </div>
@@ -470,13 +459,6 @@
         <div class="setting-row">
           <label for="show-recent">Show Recent Files</label>
           <input type="checkbox" id="show-recent" checked>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h4>Appearance</h4>
-        <div class="setting-row">
-          <label for="center-dialogs">Center Dialogs</label>
-          <input type="checkbox" id="center-dialogs">
         </div>
       </div>
       <div class="dialog-actions">

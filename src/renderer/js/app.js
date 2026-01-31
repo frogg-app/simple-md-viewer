@@ -49,7 +49,6 @@ class App {
     this.updateShortcutHint();
     this.updateShortcutsDialog();
     this.loadSectionVisibility();
-    this.applyDialogCentering();
 
     // Load docs folder in web mode
     if (!this.isElectron()) {
@@ -108,22 +107,44 @@ class App {
 
   setupDragAndDrop() {
     const app = document.getElementById('app');
+    let dragCounter = 0; // Track drag enter/leave to handle child elements
+
+    // Prevent default on document to stop browser opening files
+    document.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    
+    document.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    app.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter++;
+      app.classList.add('drag-over');
+    });
 
     app.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      app.classList.add('drag-over');
     });
 
     app.addEventListener('dragleave', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      app.classList.remove('drag-over');
+      dragCounter--;
+      if (dragCounter === 0) {
+        app.classList.remove('drag-over');
+      }
     });
 
     app.addEventListener('drop', async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      dragCounter = 0;
       app.classList.remove('drag-over');
 
       const files = Array.from(e.dataTransfer.files);
@@ -155,14 +176,15 @@ class App {
               isRemote: false
             });
           };
+          reader.onerror = () => {
+            this.toast.show('Failed to read file', 'error');
+          };
           reader.readAsText(mdFile);
         }
+      } else if (files.length > 0) {
+        this.toast.show('Please drop a .md or .markdown file', 'warning');
       }
     });
-
-    // Prevent default browser behavior
-    document.addEventListener('dragover', (e) => e.preventDefault());
-    document.addEventListener('drop', (e) => e.preventDefault());
   }
 
   setupKeyboardShortcuts() {
@@ -738,11 +760,6 @@ class App {
       this.showAboutDialog();
     });
     
-    // Mobile theme toggle in header
-    document.getElementById('mobile-theme-btn')?.addEventListener('click', () => {
-      this.themeManager.toggleTheme();
-    });
-    
     // Close menu on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
@@ -871,11 +888,6 @@ class App {
 
     document.getElementById('menu-zoom-reset').addEventListener('click', () => {
       this.resetZoom();
-      this.closeAllMenus();
-    });
-
-    document.getElementById('menu-toggle-theme').addEventListener('click', () => {
-      this.themeManager.toggleTheme();
       this.closeAllMenus();
     });
 
@@ -1067,15 +1079,10 @@ class App {
     const settingsClose = document.getElementById('settings-close');
     const showDocsCheckbox = document.getElementById('show-docs');
     const showRecentCheckbox = document.getElementById('show-recent');
-    const centerDialogsCheckbox = document.getElementById('center-dialogs');
 
     // Open settings dialog
     if (settingsBtn && settingsDialog) {
       settingsBtn.addEventListener('click', () => {
-        // Set current checkbox values
-        if (centerDialogsCheckbox) {
-          centerDialogsCheckbox.checked = this.settingsManager.get('centerDialogs');
-        }
         settingsDialog.showModal();
       });
     }
@@ -1113,30 +1120,6 @@ class App {
       });
     }
 
-    // Center dialogs toggle
-    if (centerDialogsCheckbox) {
-      centerDialogsCheckbox.addEventListener('change', () => {
-        const centered = centerDialogsCheckbox.checked;
-        this.settingsManager.set('centerDialogs', centered);
-        this.applyDialogCentering();
-      });
-    }
-
-  }
-
-  /**
-   * Apply dialog centering based on setting
-   */
-  applyDialogCentering() {
-    const centered = this.settingsManager.get('centerDialogs');
-    const dialogs = document.querySelectorAll('dialog');
-    dialogs.forEach(dialog => {
-      if (centered) {
-        dialog.classList.add('centered');
-      } else {
-        dialog.classList.remove('centered');
-      }
-    });
   }
 
   /**
@@ -1147,6 +1130,7 @@ class App {
     const btnEdit = document.getElementById('btn-edit');
     const btnSplit = document.getElementById('btn-split');
     const btnSave = document.getElementById('btn-save');
+    const btnDownload = document.getElementById('btn-download');
     const btnCloseEdit = document.getElementById('btn-close-edit');
 
     if (btnEdit) {
@@ -1159,6 +1143,10 @@ class App {
 
     if (btnSave) {
       btnSave.addEventListener('click', () => this.saveFile());
+    }
+
+    if (btnDownload) {
+      btnDownload.addEventListener('click', () => this.downloadFile());
     }
 
     if (btnCloseEdit) {
@@ -1336,10 +1324,37 @@ class App {
       this.currentContent = content;
       this.editor.markAsSaved();
       this.toast.show('Saved', 'success');
+      
+      // Close editor and return to viewer
+      this.closeEditor();
     } catch (err) {
       console.error('Save error:', err);
       this.toast.show(`Save failed: ${err.message}`, 'error');
     }
+  }
+
+  /**
+   * Download the current file to local disk
+   */
+  downloadFile() {
+    const content = this.editor.getContent();
+    const fileName = this.currentFilePath ? this.currentFilePath.split('/').pop() : 'document.md';
+    
+    // Create blob and download link
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up
+    URL.revokeObjectURL(url);
+    
+    this.toast.show('Downloaded', 'success');
   }
 }
 

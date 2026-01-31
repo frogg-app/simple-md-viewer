@@ -3,11 +3,13 @@ services:
     build: .
     image: simple-md-viewer:latest
     container_name: simple-md-viewer
+    # Run as current user so mounted volumes are writable
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - "5020:3000"
     volumes:
-      # Mount directory containing markdown files (read-only)
-      - ./docs:/app/docs:ro
+      # Mount directory containing markdown files (writable for new file creation)
+      - ./docs:/app/docs
       # Mount dist/web for development (rebuild not required)
       - ./dist/web:/app/dist/web:ro
     environment:

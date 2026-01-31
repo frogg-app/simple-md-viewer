@@ -10,12 +10,7 @@ dialog {
   max-width: 90vw;
   max-height: 90vh;
   overflow: hidden;
-  /* Default: top-right positioning */
-  margin: 2rem 2rem auto auto;
-}
-
-/* Centered dialogs (when setting enabled) */
-dialog.centered {
+  /* Always centered */
   margin: auto;
 }
 
