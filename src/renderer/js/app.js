@@ -8,6 +8,9 @@ import { CredentialsDialog } from './credentials-dialog.js';
 import { SettingsManager } from './settings-manager.js';
 import { MarkdownEditor } from './editor.js';
 
+// Minimum swipe distance in pixels to trigger menu close
+const SWIPE_THRESHOLD = 50;
+
 class App {
   constructor() {
     this.markdownRenderer = new MarkdownRenderer();
@@ -40,6 +43,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupDialogs();
     this.setupMenuBar();
+    this.setupMobileMenu();
     this.setupSettingsDialog();
     this.setupEditor();
     this.updateShortcutHint();
@@ -312,9 +316,16 @@ class App {
     if (!this.isElectron()) {
       document.title = `${data.fileName} - MD Viewer`;
     }
+    
+    // Update mobile header title
+    const mobileTitle = document.getElementById('mobile-title');
+    if (mobileTitle) {
+      mobileTitle.textContent = data.fileName;
+    }
 
     // Update menu state
     this.updateMenuState();
+    this.updateMobileMenuState();
 
     // Show toast
     this.toast.show(`Opened ${data.fileName}`, 'success');
@@ -570,6 +581,109 @@ class App {
     this.updateMenuState();
   }
 
+  /**
+   * Setup mobile hamburger menu
+   */
+  setupMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    
+    if (!mobileMenuBtn || !mobileMenu) return;
+    
+    // Open menu
+    mobileMenuBtn.addEventListener('click', () => {
+      this.openMobileMenu();
+    });
+    
+    // Close menu
+    mobileMenuClose?.addEventListener('click', () => {
+      this.closeMobileMenu();
+    });
+    
+    // Close on overlay click
+    mobileMenuOverlay?.addEventListener('click', () => {
+      this.closeMobileMenu();
+    });
+    
+    // Setup mobile menu actions
+    document.getElementById('mobile-open-local')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      document.getElementById('file-input')?.click();
+    });
+    
+    document.getElementById('mobile-reload')?.addEventListener('click', async () => {
+      this.closeMobileMenu();
+      if (this.currentFilePath && this.isElectron()) {
+        await window.electronAPI.reloadFile();
+      }
+    });
+    
+    document.getElementById('mobile-settings')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      document.getElementById('settings-dialog')?.showModal();
+    });
+    
+    document.getElementById('mobile-shortcuts')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      this.showShortcutsDialog();
+    });
+    
+    document.getElementById('mobile-about')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      this.showAboutDialog();
+    });
+    
+    // Mobile theme toggle in header
+    document.getElementById('mobile-theme-btn')?.addEventListener('click', () => {
+      this.themeManager.toggleTheme();
+    });
+    
+    // Close menu on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+        this.closeMobileMenu();
+      }
+    });
+    
+    // Handle swipe to close
+    let touchStartX = 0;
+    mobileMenu.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    mobileMenu.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      if (diff > SWIPE_THRESHOLD) {
+        this.closeMobileMenu();
+      }
+    }, { passive: true });
+  }
+  
+  openMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    
+    mobileMenu?.classList.add('open');
+    mobileMenuOverlay?.classList.add('open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    
+    mobileMenu?.classList.remove('open');
+    mobileMenuOverlay?.classList.remove('open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
   openMenu(menuItem) {
     menuItem.classList.add('active');
     const button = menuItem.querySelector('.menu-button');
@@ -684,6 +798,14 @@ class App {
     const hasFile = !!this.currentFilePath;
     document.getElementById('menu-reload').disabled = !hasFile;
     document.getElementById('menu-close').disabled = !hasFile;
+  }
+  
+  updateMobileMenuState() {
+    const hasFile = !!this.currentFilePath;
+    const mobileReload = document.getElementById('mobile-reload');
+    if (mobileReload) {
+      mobileReload.disabled = !hasFile;
+    }
   }
 
   toggleFullscreen() {

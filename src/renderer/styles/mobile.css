@@ -1,13 +1,202 @@
 /* Mobile-specific styles for polished app experience */
 
-/* Mobile Menu Bar - Compact & Touch-Friendly */
+/* ===== Mobile Header ===== */
+#mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 56px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mobile-menu-btn,
+.mobile-menu-close,
+.mobile-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-close:hover,
+.mobile-action-btn:hover {
+  background: var(--border-color);
+}
+
+.mobile-menu-btn:active,
+.mobile-menu-close:active,
+.mobile-action-btn:active {
+  transform: scale(0.95);
+}
+
+.mobile-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.mobile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===== Mobile Slide-out Menu ===== */
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-menu-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 85vw;
+  background: var(--bg-secondary);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 56px;
+}
+
+.mobile-menu-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobile-menu-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.mobile-menu-section {
+  padding: 8px 0;
+}
+
+.mobile-menu-section h4 {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.mobile-menu-item:hover {
+  background: var(--bg-primary);
+}
+
+.mobile-menu-item:active {
+  background: var(--border-color);
+}
+
+.mobile-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-menu-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ===== Desktop Menu ===== */
+.desktop-menu {
+  display: flex;
+}
+
+/* ===== Mobile Responsive Breakpoints ===== */
 @media (max-width: 768px) {
+  /* Show mobile header, hide desktop menu */
+  #mobile-header {
+    display: flex;
+  }
+  
+  .mobile-menu-overlay,
+  .mobile-menu {
+    display: block;
+  }
+  
+  .desktop-menu {
+    display: none !important;
+  }
+  
   #menu-bar {
-    height: 48px;
-    padding: 0 0.5rem;
-    flex-wrap: wrap;
+    display: none !important;
   }
 
+  /* Adjust app layout for mobile header */
+  #app {
+    padding-top: 0;
+  }
+}
+
+/* Mobile Menu Bar - Compact & Touch-Friendly */
+@media (max-width: 768px) {
   .menu-button {
     padding: 0 0.75rem;
     font-size: 0.875rem;
@@ -33,7 +222,8 @@
 /* Mobile Empty State */
 @media (max-width: 768px) {
   #empty-state {
-    padding: 1rem;
+    padding: 3rem 1rem 1.5rem 1rem;
+    justify-content: flex-start;
   }
 
   .empty-icon {
@@ -46,6 +236,10 @@
 
   #empty-state p {
     font-size: 0.875rem;
+  }
+  
+  #shortcut-hint {
+    display: none;
   }
 
   .files-sections {
@@ -74,11 +268,30 @@
   /* Improve code blocks on mobile */
   #markdown-content pre {
     overflow-x: auto;
+    font-size: 0.8125rem;
   }
 
   #markdown-content table {
     display: block;
     overflow-x: auto;
+  }
+  
+  /* Better heading sizes on mobile */
+  #markdown-content h1 {
+    font-size: 1.75rem;
+  }
+  
+  #markdown-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  #markdown-content h3 {
+    font-size: 1.25rem;
+  }
+  
+  /* View pane adjustments */
+  .view-pane {
+    padding: 1rem;
   }
 }
 
@@ -165,6 +378,61 @@
   }
 }
 
+/* Mobile Editor Improvements */
+@media (max-width: 768px) {
+  .floating-actions {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .floating-btn {
+    width: 52px;
+    height: 52px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .floating-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .edit-header {
+    padding: 8px 12px;
+    min-height: 52px;
+  }
+  
+  .edit-action-btn {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 8px;
+  }
+  
+  .edit-action-btn span {
+    display: none;
+  }
+  
+  .edit-title span {
+    display: none;
+  }
+  
+  .edit-preview {
+    display: none !important;
+  }
+  
+  /* Improve CodeMirror on mobile */
+  .cm-editor {
+    font-size: 14px;
+  }
+  
+  .cm-content {
+    padding: 0.75rem 0 !important;
+  }
+  
+  .cm-gutters {
+    padding-left: 8px;
+  }
+}
+
 /* Touch-friendly buttons and controls */
 @media (hover: none) and (pointer: coarse) {
   /* Touch device specific styles */
@@ -177,8 +445,8 @@
 
   #recent-files-list li button,
   #docs-files-list li button {
-    min-height: 44px;
-    padding: 0.75rem;
+    min-height: 48px;
+    padding: 0.875rem;
   }
 
   .file-item {
@@ -202,7 +470,8 @@
   /* Active states for touch feedback */
   .menu-button:active,
   .btn-primary:active,
-  .btn-secondary:active {
+  .btn-secondary:active,
+  .mobile-menu-item:active {
     opacity: 0.8;
     transform: scale(0.98);
   }
@@ -210,8 +479,8 @@
 
 /* Landscape mobile optimization */
 @media (max-width: 768px) and (orientation: landscape) {
-  #menu-bar {
-    height: 40px;
+  #mobile-header {
+    height: 48px;
   }
 
   #content {
@@ -225,21 +494,25 @@
   .file-list {
     max-height: 30vh;
   }
+  
+  .mobile-menu {
+    width: 320px;
+  }
 }
 
 /* Small mobile devices */
 @media (max-width: 480px) {
   html {
-    font-size: 14px;
+    font-size: 15px;
   }
 
-  #menu-bar {
-    height: 44px;
+  #mobile-header {
+    height: 52px;
+    padding: 0 8px;
   }
 
-  .menu-button {
-    font-size: 0.8125rem;
-    padding: 0 0.5rem;
+  .mobile-title {
+    font-size: 0.9375rem;
   }
 
   #empty-state h2 {
@@ -258,16 +531,16 @@
   .shortcuts-table td {
     font-size: 0.875rem;
   }
+  
+  .mobile-menu {
+    width: 260px;
+  }
 }
 
 /* Very small devices - compact mode */
 @media (max-width: 360px) {
   html {
-    font-size: 13px;
-  }
-
-  #menu-bar {
-    overflow-x: auto;
+    font-size: 14px;
   }
 
   .files-sections {
@@ -276,6 +549,10 @@
 
   dialog form {
     padding: 0.75rem;
+  }
+  
+  .mobile-menu {
+    width: 240px;
   }
 }
 
@@ -300,9 +577,17 @@
 
 /* Safe area insets for notched devices */
 @supports (padding: env(safe-area-inset-top)) {
-  #menu-bar {
-    padding-left: max(0.5rem, env(safe-area-inset-left));
-    padding-right: max(0.5rem, env(safe-area-inset-right));
+  #mobile-header {
+    padding-top: env(safe-area-inset-top);
+    height: calc(56px + env(safe-area-inset-top));
+  }
+  
+  .mobile-menu {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .mobile-menu-header {
+    padding-top: max(8px, env(safe-area-inset-top));
   }
 
   #content {
@@ -314,6 +599,11 @@
   #toast-container {
     right: max(1rem, env(safe-area-inset-right));
     bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .floating-actions {
+    bottom: max(16px, env(safe-area-inset-bottom));
+    right: max(16px, env(safe-area-inset-right));
   }
 }
 
@@ -332,7 +622,9 @@
   .loading-spinner,
   .menu-dropdown,
   dialog,
-  #app::after {
+  #app::after,
+  .mobile-menu,
+  .mobile-menu-overlay {
     animation-duration: 0.01ms;
     animation-iteration-count: 1;
     transition-duration: 0.01ms;
@@ -355,6 +647,10 @@
 
   [data-theme="dark"] .menu-dropdown {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  
+  [data-theme="dark"] .mobile-menu {
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.4);
   }
 }
 
