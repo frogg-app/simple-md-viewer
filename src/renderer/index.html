@@ -57,6 +57,15 @@
     <div class="mobile-menu-content">
       <div class="mobile-menu-section">
         <h4>File</h4>
+        <button id="mobile-new-file" class="mobile-menu-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="11" x2="12" y2="17"></line>
+            <line x1="9" y1="14" x2="15" y2="14"></line>
+          </svg>
+          <span>New File</span>
+        </button>
         <button id="mobile-open-local" class="mobile-menu-item">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -112,6 +121,12 @@
     <div class="menu-item">
       <button class="menu-button" aria-haspopup="true" aria-expanded="false">File</button>
       <ul class="menu-dropdown" role="menu">
+        <li role="menuitem">
+          <button id="menu-new-file" class="menu-action">
+            <span>New File</span>
+            <span class="menu-shortcut">Ctrl+N</span>
+          </button>
+        </li>
         <li role="menuitem">
           <button id="menu-open-local" class="menu-action">
             <span>Open Local File</span>
@@ -385,10 +400,26 @@
       </form>
     </dialog>
 
+    <dialog id="new-file-dialog" class="modal">
+      <form method="dialog">
+        <h3>New File</h3>
+        <div class="form-group">
+          <label for="new-file-name">File Name</label>
+          <input type="text" id="new-file-name" placeholder="document.md" required pattern=".*\.md$|.*\.markdown$">
+          <small>File will be created in the docs folder</small>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn-secondary" id="new-file-cancel">Cancel</button>
+          <button type="submit" class="btn-primary" id="new-file-create">Create</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="shortcuts-dialog" class="modal">
       <h3>Keyboard Shortcuts</h3>
       <table class="shortcuts-table">
         <tbody>
+          <tr id="shortcut-ctrl-n"><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>New file</td></tr>
           <tr id="shortcut-ctrl-o"><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Open local file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></td><td>Open remote file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>Edit file</td></tr>

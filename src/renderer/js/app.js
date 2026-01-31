@@ -166,7 +166,15 @@ class App {
   }
 
   setupKeyboardShortcuts() {
-    // Use capture to intercept before browser handles Ctrl+O
+    // Use capture to intercept before browser handles Ctrl+N and Ctrl+O
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n' && !e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showNewFileDialog();
+      }
+    }, { capture: true });
+
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o' && !e.shiftKey) {
         e.preventDefault();
@@ -242,6 +250,16 @@ class App {
   }
 
   setupDialogs() {
+    // New file dialog
+    document.getElementById('new-file-cancel')?.addEventListener('click', () => {
+      document.getElementById('new-file-dialog')?.close();
+    });
+
+    document.getElementById('new-file-dialog')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.createNewFile();
+    });
+
     // Shortcuts dialog
     document.getElementById('shortcuts-close').addEventListener('click', () => {
       document.getElementById('shortcuts-dialog').close();
@@ -520,6 +538,86 @@ class App {
     document.getElementById('about-dialog').showModal();
   }
 
+  /**
+   * Show the new file dialog
+   */
+  showNewFileDialog() {
+    const dialog = document.getElementById('new-file-dialog');
+    const input = document.getElementById('new-file-name');
+    if (dialog && input) {
+      input.value = '';
+      dialog.showModal();
+      input.focus();
+    }
+  }
+
+  /**
+   * Create a new file from the dialog
+   */
+  async createNewFile() {
+    const dialog = document.getElementById('new-file-dialog');
+    const input = document.getElementById('new-file-name');
+    
+    if (!input) return;
+    
+    let fileName = input.value.trim();
+    if (!fileName) {
+      this.toast.show('Please enter a file name', 'warning');
+      return;
+    }
+    
+    // Ensure .md extension
+    if (!fileName.endsWith('.md') && !fileName.endsWith('.markdown')) {
+      fileName += '.md';
+    }
+    
+    // Sanitize filename - remove path traversal attempts
+    fileName = fileName.replace(/[/\\]/g, '-').replace(/\.\./g, '');
+    
+    try {
+      // Create file via API with initial content
+      const initialContent = `# ${fileName.replace(/\\.md$|\\.markdown$/i, '')}\n\nStart writing your markdown here...\n`;
+      
+      const response = await fetch('/api/file', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: fileName,
+          content: initialContent
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create file');
+      }
+
+      dialog?.close();
+      
+      // Open the newly created file
+      this.handleFileOpened({
+        content: initialContent,
+        path: fileName,
+        fileName: fileName,
+        isRemote: false
+      });
+
+      // Switch to editor mode
+      this.currentContent = initialContent;
+      this.openEditor();
+      
+      this.toast.show(`Created ${fileName}`, 'success');
+      
+      // Reload docs folder list
+      await this.loadDocsFolder();
+    } catch (err) {
+      console.error('Create file error:', err);
+      this.toast.show(`Failed to create file: ${err.message}`, 'error');
+    }
+  }
+
   async manageCredentials() {
     // Show list of saved credentials with option to delete
     this.toast.show('Credential management coming soon', 'info');
@@ -608,6 +706,11 @@ class App {
     });
     
     // Setup mobile menu actions
+    document.getElementById('mobile-new-file')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      this.showNewFileDialog();
+    });
+
     document.getElementById('mobile-open-local')?.addEventListener('click', () => {
       this.closeMobileMenu();
       document.getElementById('file-input')?.click();
@@ -698,6 +801,11 @@ class App {
 
   setupMenuActions() {
     // File menu
+    document.getElementById('menu-new-file').addEventListener('click', () => {
+      this.showNewFileDialog();
+      this.closeAllMenus();
+    });
+
     document.getElementById('menu-open-local').addEventListener('click', async () => {
       if (this.isElectron()) {
         await window.electronAPI.openFileDialog();
