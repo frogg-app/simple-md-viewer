@@ -62,6 +62,53 @@ function routes(docsPath) {
     }
   });
 
+  // Save file content
+  router.put('/file', async (req, res) => {
+    const { path: filePath, content } = req.body;
+
+    if (!filePath) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+
+    if (content === undefined || content === null) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    // Security: Prevent path traversal
+    const resolvedPath = path.resolve(resolvedDocsPath, filePath);
+    if (!resolvedPath.startsWith(resolvedDocsPath)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Security: Only allow .md files
+    if (!resolvedPath.endsWith('.md') && !resolvedPath.endsWith('.markdown')) {
+      return res.status(403).json({ error: 'Only markdown files allowed' });
+    }
+
+    try {
+      // Write content to file
+      await fs.writeFile(resolvedPath, content, 'utf-8');
+      const stat = await fs.stat(resolvedPath);
+
+      res.json({
+        success: true,
+        path: filePath,
+        fileName: path.basename(filePath),
+        size: stat.size,
+        modified: stat.mtime.toISOString()
+      });
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        res.status(404).json({ error: 'File path is invalid or parent directory does not exist' });
+      } else if (error.code === 'EACCES') {
+        res.status(403).json({ error: 'Permission denied' });
+      } else {
+        console.error('Error saving file:', error);
+        res.status(500).json({ error: 'Failed to save file' });
+      }
+    }
+  });
+
   // Check if file has been modified (for polling)
   router.get('/file/modified', async (req, res) => {
     const filePath = req.query.path;

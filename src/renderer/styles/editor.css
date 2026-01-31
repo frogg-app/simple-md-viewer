@@ -1,0 +1,199 @@
+/* Editor Styles - Minimal, clean design */
+
+/* Floating action buttons */
+.floating-actions {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+}
+
+.floating-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.floating-btn:hover {
+  background: var(--link-color);
+  color: white;
+  transform: scale(1.05);
+}
+
+.floating-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* View pane */
+.view-pane {
+  height: 100%;
+  overflow: auto;
+  padding: 2rem;
+}
+
+.view-pane article {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Edit overlay */
+.edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-overlay.hidden {
+  display: none;
+}
+
+/* Edit header */
+.edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.edit-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.edit-title svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.edit-action-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.edit-action-btn.primary {
+  background: var(--link-color);
+  color: white;
+}
+
+.edit-action-btn.primary:hover {
+  background: color-mix(in srgb, var(--link-color) 85%, black);
+}
+
+.edit-action-btn.active {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--link-color);
+}
+
+.edit-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Edit content area */
+.edit-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-container .cm-editor {
+  height: 100%;
+}
+
+/* Split preview */
+.edit-preview {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 2rem;
+  border-left: 1px solid var(--border-color);
+}
+
+.edit-preview.hidden {
+  display: none;
+}
+
+.edit-preview article {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .floating-actions {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .floating-btn {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .edit-header {
+    padding: 8px 12px;
+  }
+  
+  .edit-action-btn span {
+    display: none;
+  }
+  
+  .edit-preview {
+    display: none !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .floating-actions,
+  .edit-overlay {
+    display: none !important;
+  }
+}

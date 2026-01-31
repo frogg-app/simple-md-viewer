@@ -6,6 +6,10 @@ import { ToastNotifications } from './toast-notifications.js';
 import { RemoteDialog } from './remote-dialog.js';
 import { CredentialsDialog } from './credentials-dialog.js';
 import { SettingsManager } from './settings-manager.js';
+import { MarkdownEditor } from './editor.js';
+
+// Minimum swipe distance in pixels to trigger menu close
+const SWIPE_THRESHOLD = 50;
 
 class App {
   constructor() {
@@ -17,11 +21,17 @@ class App {
     this.remoteDialog = new RemoteDialog();
     this.credentialsDialog = new CredentialsDialog();
     this.settingsManager = new SettingsManager();
+    this.editor = new MarkdownEditor();
 
     this.currentFilePath = null;
     this.isRemoteFile = false;
     this.pageZoom = 1;
     this.activeMenu = null;
+    
+    // Editor state
+    this.currentMode = 'view'; // 'view' or 'edit' (split preview is a toggle within edit mode)
+    this.currentContent = '';
+    this.livePreviewDebounceTimer = null;
 
     this.init();
   }
@@ -33,7 +43,9 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupDialogs();
     this.setupMenuBar();
+    this.setupMobileMenu();
     this.setupSettingsDialog();
+    this.setupEditor();
     this.updateShortcutHint();
     this.updateShortcutsDialog();
     this.loadSectionVisibility();
@@ -183,6 +195,24 @@ class App {
         }
       }
 
+      // Ctrl/Cmd + E: Open editor
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        if (this.currentFilePath && !this.isRemoteFile) {
+          if (this.currentMode === 'view') {
+            this.openEditor();
+          }
+        }
+      }
+
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (this.currentMode === 'edit') {
+          this.saveFile();
+        }
+      }
+
       // Ctrl/Cmd + F: Find (browser native)
       // Let it pass through
 
@@ -200,9 +230,13 @@ class App {
         this.resetZoom();
       }
 
-      // Escape closes dialogs
+      // Escape closes dialogs or editor
       if (e.key === 'Escape') {
-        this.closeAllDialogs();
+        if (this.currentMode === 'edit') {
+          this.closeEditor();
+        } else {
+          this.closeAllDialogs();
+        }
       }
     });
   }
@@ -256,21 +290,42 @@ class App {
   handleFileOpened(data) {
     this.currentFilePath = data.path;
     this.isRemoteFile = data.isRemote;
+    this.currentContent = data.content;
 
     // Hide empty state, show content
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
 
+    // Set to view mode by default
+    this.setEditorMode('view');
+
     // Render markdown
     this.renderContent(data.content);
+
+    // Show/hide edit button based on whether it's a remote file
+    const floatingActions = document.getElementById('floating-actions');
+    if (floatingActions) {
+      if (data.isRemote) {
+        floatingActions.classList.add('hidden');
+      } else {
+        floatingActions.classList.remove('hidden');
+      }
+    }
 
     // Update title in web mode
     if (!this.isElectron()) {
       document.title = `${data.fileName} - MD Viewer`;
     }
+    
+    // Update mobile header title
+    const mobileTitle = document.getElementById('mobile-title');
+    if (mobileTitle) {
+      mobileTitle.textContent = data.fileName;
+    }
 
     // Update menu state
     this.updateMenuState();
+    this.updateMobileMenuState();
 
     // Show toast
     this.toast.show(`Opened ${data.fileName}`, 'success');
@@ -526,6 +581,109 @@ class App {
     this.updateMenuState();
   }
 
+  /**
+   * Setup mobile hamburger menu
+   */
+  setupMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    
+    if (!mobileMenuBtn || !mobileMenu) return;
+    
+    // Open menu
+    mobileMenuBtn.addEventListener('click', () => {
+      this.openMobileMenu();
+    });
+    
+    // Close menu
+    mobileMenuClose?.addEventListener('click', () => {
+      this.closeMobileMenu();
+    });
+    
+    // Close on overlay click
+    mobileMenuOverlay?.addEventListener('click', () => {
+      this.closeMobileMenu();
+    });
+    
+    // Setup mobile menu actions
+    document.getElementById('mobile-open-local')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      document.getElementById('file-input')?.click();
+    });
+    
+    document.getElementById('mobile-reload')?.addEventListener('click', async () => {
+      this.closeMobileMenu();
+      if (this.currentFilePath && this.isElectron()) {
+        await window.electronAPI.reloadFile();
+      }
+    });
+    
+    document.getElementById('mobile-settings')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      document.getElementById('settings-dialog')?.showModal();
+    });
+    
+    document.getElementById('mobile-shortcuts')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      this.showShortcutsDialog();
+    });
+    
+    document.getElementById('mobile-about')?.addEventListener('click', () => {
+      this.closeMobileMenu();
+      this.showAboutDialog();
+    });
+    
+    // Mobile theme toggle in header
+    document.getElementById('mobile-theme-btn')?.addEventListener('click', () => {
+      this.themeManager.toggleTheme();
+    });
+    
+    // Close menu on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+        this.closeMobileMenu();
+      }
+    });
+    
+    // Handle swipe to close
+    let touchStartX = 0;
+    mobileMenu.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    
+    mobileMenu.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      if (diff > SWIPE_THRESHOLD) {
+        this.closeMobileMenu();
+      }
+    }, { passive: true });
+  }
+  
+  openMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    
+    mobileMenu?.classList.add('open');
+    mobileMenuOverlay?.classList.add('open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    
+    mobileMenu?.classList.remove('open');
+    mobileMenuOverlay?.classList.remove('open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
   openMenu(menuItem) {
     menuItem.classList.add('active');
     const button = menuItem.querySelector('.menu-button');
@@ -640,6 +798,14 @@ class App {
     const hasFile = !!this.currentFilePath;
     document.getElementById('menu-reload').disabled = !hasFile;
     document.getElementById('menu-close').disabled = !hasFile;
+  }
+  
+  updateMobileMenuState() {
+    const hasFile = !!this.currentFilePath;
+    const mobileReload = document.getElementById('mobile-reload');
+    if (mobileReload) {
+      mobileReload.disabled = !hasFile;
+    }
   }
 
   toggleFullscreen() {
@@ -863,6 +1029,209 @@ class App {
         dialog.classList.remove('centered');
       }
     });
+  }
+
+  /**
+   * Setup editor tabs, toolbar, and event handlers
+   */
+  setupEditor() {
+    // Setup edit button
+    const btnEdit = document.getElementById('btn-edit');
+    const btnSplit = document.getElementById('btn-split');
+    const btnSave = document.getElementById('btn-save');
+    const btnCloseEdit = document.getElementById('btn-close-edit');
+
+    if (btnEdit) {
+      btnEdit.addEventListener('click', () => this.openEditor());
+    }
+
+    if (btnSplit) {
+      btnSplit.addEventListener('click', () => this.toggleSplitView());
+    }
+
+    if (btnSave) {
+      btnSave.addEventListener('click', () => this.saveFile());
+    }
+
+    if (btnCloseEdit) {
+      btnCloseEdit.addEventListener('click', () => this.closeEditor());
+    }
+
+    // Setup live preview
+    this.editor.onContentChange = (content) => {
+      this.currentContent = content;
+      this.debouncedLivePreview();
+    };
+  }
+
+  /**
+   * Open the editor overlay
+   */
+  openEditor() {
+    if (!this.currentFilePath) return;
+    
+    const editOverlay = document.getElementById('edit-overlay');
+    const floatingActions = document.getElementById('floating-actions');
+    
+    if (editOverlay) {
+      editOverlay.classList.remove('hidden');
+      this.currentMode = 'edit';
+      
+      // Initialize CodeMirror editor
+      this.editor.init(this.currentContent, this.currentFilePath);
+      this.editor.focus();
+    }
+    
+    if (floatingActions) {
+      floatingActions.classList.add('hidden');
+    }
+  }
+
+  /**
+   * Close the editor overlay
+   */
+  closeEditor() {
+    const editOverlay = document.getElementById('edit-overlay');
+    const floatingActions = document.getElementById('floating-actions');
+    const editPreview = document.getElementById('edit-preview');
+    const btnSplit = document.getElementById('btn-split');
+    
+    // Check for unsaved changes
+    if (this.editor.hasUnsavedChanges()) {
+      if (!confirm('You have unsaved changes. Are you sure you want to close?')) {
+        return;
+      }
+    }
+    
+    // Update currentContent with editor content before closing
+    this.currentContent = this.editor.getContent();
+    
+    // Refresh the main view with current content
+    this.renderContent(this.currentContent);
+    
+    if (editOverlay) {
+      editOverlay.classList.add('hidden');
+      this.currentMode = 'view';
+    }
+    
+    if (floatingActions) {
+      floatingActions.classList.remove('hidden');
+    }
+    
+    // Reset split view
+    if (editPreview) {
+      editPreview.classList.add('hidden');
+    }
+    if (btnSplit) {
+      btnSplit.classList.remove('active');
+    }
+    
+    // Destroy editor to clean up
+    this.editor.destroy();
+  }
+
+  /**
+   * Set editor mode (view, edit, or split)
+   */
+  setEditorMode(mode) {
+    this.currentMode = mode;
+    
+    // Update floating actions visibility
+    const floatingActions = document.getElementById('floating-actions');
+    if (floatingActions && this.currentFilePath && !this.isRemoteFile) {
+      floatingActions.classList.remove('hidden');
+    }
+  }
+
+  /**
+   * Toggle split view
+   */
+  toggleSplitView() {
+    const editPreview = document.getElementById('edit-preview');
+    const previewContent = document.getElementById('preview-content');
+    const btnSplit = document.getElementById('btn-split');
+    
+    if (!editPreview) return;
+    
+    const isSplit = !editPreview.classList.contains('hidden');
+    
+    if (isSplit) {
+      editPreview.classList.add('hidden');
+      btnSplit?.classList.remove('active');
+    } else {
+      editPreview.classList.remove('hidden');
+      btnSplit?.classList.add('active');
+      // Render preview
+      this.renderPreviewContent(this.currentContent);
+    }
+  }
+
+  /**
+   * Render content to the preview pane in split view
+   */
+  async renderPreviewContent(content) {
+    const previewContent = document.getElementById('preview-content');
+    if (!previewContent) return;
+    
+    const html = await this.markdownRenderer.render(content, this.currentFilePath);
+    previewContent.innerHTML = html;
+    
+    // Process mermaid diagrams
+    await this.mermaidHandler.renderDiagrams(previewContent);
+  }
+
+  /**
+   * Debounced live preview update
+   */
+  debouncedLivePreview() {
+    if (this.livePreviewDebounceTimer) {
+      clearTimeout(this.livePreviewDebounceTimer);
+    }
+    
+    this.livePreviewDebounceTimer = setTimeout(() => {
+      const editPreview = document.getElementById('edit-preview');
+      if (editPreview && !editPreview.classList.contains('hidden')) {
+        this.renderPreviewContent(this.currentContent);
+      }
+    }, 150);
+  }
+
+  /**
+   * Save the current file
+   */
+  async saveFile() {
+    if (!this.currentFilePath || this.isRemoteFile) {
+      this.toast.show('Cannot save remote files', 'warning');
+      return;
+    }
+
+    const content = this.editor.getContent();
+
+    try {
+      // Save via API
+      const response = await fetch('/api/file', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          path: this.currentFilePath,
+          content: content
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to save file');
+      }
+
+      this.currentContent = content;
+      this.editor.markAsSaved();
+      this.toast.show('Saved', 'success');
+    } catch (err) {
+      console.error('Save error:', err);
+      this.toast.show(`Save failed: ${err.message}`, 'error');
+    }
   }
 }
 

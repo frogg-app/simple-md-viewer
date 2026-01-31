@@ -10,12 +10,105 @@
   <link rel="stylesheet" href="./styles/markdown.css">
   <link rel="stylesheet" href="./styles/mermaid.css">
   <link rel="stylesheet" href="./styles/dialogs.css">
+  <link rel="stylesheet" href="./styles/editor.css">
   <link rel="stylesheet" href="./styles/mobile.css">
   <link rel="stylesheet" href="./styles/themes/dark.css">
 </head>
 <body>
-  <!-- Menu Bar -->
-  <nav id="menu-bar">
+  <!-- Mobile Header -->
+  <header id="mobile-header">
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <span id="mobile-title" class="mobile-title">MD Viewer</span>
+    <div class="mobile-header-actions">
+      <button id="mobile-theme-btn" class="mobile-action-btn" aria-label="Toggle theme">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Slide-out Menu -->
+  <div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
+  <nav id="mobile-menu" class="mobile-menu" aria-label="Main menu">
+    <div class="mobile-menu-header">
+      <span class="mobile-menu-title">MD Viewer</span>
+      <button id="mobile-menu-close" class="mobile-menu-close" aria-label="Close menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="mobile-menu-content">
+      <div class="mobile-menu-section">
+        <h4>File</h4>
+        <button id="mobile-open-local" class="mobile-menu-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span>Open File</span>
+        </button>
+        <button id="mobile-reload" class="mobile-menu-item" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Reload</span>
+        </button>
+        <button id="mobile-settings" class="mobile-menu-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+      <div class="mobile-menu-section">
+        <h4>Help</h4>
+        <button id="mobile-shortcuts" class="mobile-menu-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+            <path d="M6 8h.001"></path>
+            <path d="M10 8h.001"></path>
+            <path d="M14 8h.001"></path>
+            <path d="M18 8h.001"></path>
+            <path d="M8 12h.001"></path>
+            <path d="M12 12h.001"></path>
+            <path d="M16 12h.001"></path>
+            <path d="M7 16h10"></path>
+          </svg>
+          <span>Keyboard Shortcuts</span>
+        </button>
+        <button id="mobile-about" class="mobile-menu-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>About</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Desktop Menu Bar -->
+  <nav id="menu-bar" class="desktop-menu">
     <div class="menu-item">
       <button class="menu-button" aria-haspopup="true" aria-expanded="false">File</button>
       <ul class="menu-dropdown" role="menu">
@@ -151,7 +244,61 @@
 
     <!-- Main content -->
     <main id="content" class="hidden">
-      <article id="markdown-content"></article>
+      <!-- Floating action buttons -->
+      <div class="floating-actions" id="floating-actions">
+        <button class="floating-btn" id="btn-edit" title="Edit (Ctrl+E)" aria-label="Edit file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- View pane (default) -->
+      <div class="view-pane" id="view-pane">
+        <article id="markdown-content"></article>
+      </div>
+      
+      <!-- Edit overlay (hidden by default) -->
+      <div class="edit-overlay hidden" id="edit-overlay">
+        <div class="edit-header">
+          <div class="edit-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            <span>Editing</span>
+          </div>
+          <div class="edit-actions">
+            <button class="edit-action-btn" id="btn-split" title="Split view" aria-label="Toggle split view">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="12" y1="3" x2="12" y2="21"></line>
+              </svg>
+            </button>
+            <button class="edit-action-btn primary" id="btn-save" title="Save (Ctrl+S)" aria-label="Save file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Save</span>
+            </button>
+            <button class="edit-action-btn" id="btn-close-edit" title="Close (Esc)" aria-label="Close editor">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="edit-content">
+          <div class="editor-container" id="editor-container"></div>
+          <div class="edit-preview hidden" id="edit-preview">
+            <article id="preview-content"></article>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Dialogs -->
@@ -244,14 +391,18 @@
         <tbody>
           <tr id="shortcut-ctrl-o"><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Open local file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd></td><td>Open remote file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>E</kbd></td><td>Edit file</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>R</kbd></td><td>Reload file</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td><td>Close window</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd></td><td>Zoom in</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>-</kbd></td><td>Zoom out</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>0</kbd></td><td>Reset zoom</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>F</kbd></td><td>Find in document</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo (in editor)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Redo (in editor)</td></tr>
           <tr><td><kbd>F11</kbd></td><td>Toggle fullscreen</td></tr>
-          <tr id="shortcut-home"><td><kbd>Esc</kbd></td><td>Close dialog</td></tr>
+          <tr id="shortcut-home"><td><kbd>Esc</kbd></td><td>Close editor/dialog</td></tr>
         </tbody>
       </table>
       <div class="dialog-actions">
@@ -262,7 +413,7 @@
     <dialog id="about-dialog" class="modal">
       <h3>MD Viewer</h3>
       <p>Version 1.0.0</p>
-      <p>A minimalist markdown file viewer with support for:</p>
+      <p>A minimalist markdown file viewer and editor with support for:</p>
       <ul>
         <li>GitHub Flavored Markdown</li>
         <li>Mermaid diagrams with zoom</li>
@@ -270,6 +421,7 @@
         <li>LaTeX/KaTeX math</li>
         <li>Local and remote file viewing</li>
         <li>Live file updates</li>
+        <li>Live preview editing with split view</li>
       </ul>
       <div class="dialog-actions">
         <button type="button" class="btn-primary" id="about-close">Close</button>
